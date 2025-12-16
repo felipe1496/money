@@ -1,0 +1,31 @@
+# Binários
+*.exe
+*.out
+*.test
+*.bin
+main
+app
+
+# Env
+.env
+.env.*
+*.env
+
+# Coverage
+coverage.out
+coverage.txt
+*.cover
+
+# Build
+/tmp
+/build
+/dist
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

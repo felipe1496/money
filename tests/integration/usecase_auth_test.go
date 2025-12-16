@@ -1,0 +1,157 @@
+package tests
+
+import (
+	"errors"
+	"rango-backend/resources/auth"
+	"rango-backend/resources/users"
+	mockUsers "rango-backend/resources/users/mocks"
+	"rango-backend/services"
+	"rango-backend/services/mocks"
+	mockServices "rango-backend/services/mocks"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func TestAuthUseCase_LoginWithGoogle(t *testing.T) {
+	t.Run("should not login if code is invalid", func(t *testing.T) {
+		mockGoogle := new(mockServices.MockGoogleService)
+		mockRepo := new(mockUsers.MockUsersRepo)
+		usersUC := users.NewUsersUseCase(mockRepo)
+		uc := auth.NewAuthUseCase(mockGoogle, usersUC)
+
+		mockGoogle.On("GetUserInfo", "invalid").Return(nil, errors.New("invalid token"))
+
+		_, err := uc.LoginWithGoogle("invalid")
+
+		assert.ErrorIs(t, err, auth.GoogleAuthFailedErr)
+		mockGoogle.AssertExpectations(t)
+	})
+
+	t.Run("should not login if google email is not verified", func(t *testing.T) {
+		mockGoogle := new(mockServices.MockGoogleService)
+		mockRepo := new(mockUsers.MockUsersRepo)
+		usersUC := users.NewUsersUseCase(mockRepo)
+		uc := auth.NewAuthUseCase(mockGoogle, usersUC)
+
+		emailVerified := false
+		email := "test@gmail.com"
+		mockGoogle.On("GetUserInfo", "token").Return(&services.GoogleUserInfo{
+			Email:         &email,
+			EmailVerified: &emailVerified,
+		}, nil)
+
+		_, err := uc.LoginWithGoogle("token")
+		assert.ErrorIs(t, err, auth.GoogleEmailNotVerifiedErr)
+		mockGoogle.AssertExpectations(t)
+	})
+
+	t.Run("should not login if google did not provide email", func(t *testing.T) {
+		mockGoogle := new(mockServices.MockGoogleService)
+		mockRepo := new(mockUsers.MockUsersRepo)
+		usersUC := users.NewUsersUseCase(mockRepo)
+		uc := auth.NewAuthUseCase(mockGoogle, usersUC)
+
+		emailVerified := true
+		mockGoogle.On("GetUserInfo", "token").Return(&services.GoogleUserInfo{
+			Email:         nil,
+			EmailVerified: &emailVerified,
+		}, nil)
+
+		_, err := uc.LoginWithGoogle("token")
+		assert.ErrorIs(t, err, auth.GoogleDintProvideEmailErr)
+		mockGoogle.AssertExpectations(t)
+	})
+
+	t.Run("should return error if users usecase list fails", func(t *testing.T) {
+		mockGoogleService := new(mocks.MockGoogleService)
+		mockRepo := new(mockUsers.MockUsersRepo)
+		usersUseCase := users.NewUsersUseCase(mockRepo)
+		uc := auth.NewAuthUseCase(mockGoogleService, usersUseCase)
+
+		emailVerified := true
+		email := "valid@gmail.com"
+
+		mockGoogleService.
+			On("GetUserInfo", "token").
+			Return(&services.GoogleUserInfo{
+				EmailVerified: &emailVerified,
+				Email:         &email,
+				Name:          "John Doe",
+			}, nil)
+
+		mockRepo.
+			On("ListUsers", mock.Anything).
+			Return([]users.User{}, errors.New("db error"))
+
+		_, err := uc.LoginWithGoogle("token")
+
+		assert.ErrorIs(t, err, users.FailedToFetchUsersError)
+
+		mockGoogleService.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("should_return_error_if_creating_user_fails", func(t *testing.T) {
+		googleSvcMock := new(mocks.MockGoogleService)
+		usersRepoMock := new(mockUsers.MockUsersRepo)
+		usersUseCase := users.NewUsersUseCase(usersRepoMock)
+		authUseCase := auth.NewAuthUseCase(googleSvcMock, usersUseCase)
+
+		verifiedEmail := true
+		email := "newuser@gmail.com"
+		googleSvcMock.
+			On("GetUserInfo", "valid-code").
+			Return(&services.GoogleUserInfo{
+				Email:         &email,
+				EmailVerified: &verifiedEmail,
+				Name:          "New User",
+			}, nil)
+
+		usersRepoMock.
+			On("ListUsers", mock.Anything).
+			Return([]users.User{}, nil).
+			Times(3)
+
+		usersRepoMock.
+			On("CreateUser", mock.Anything).
+			Return(users.User{}, errors.New("db error"))
+
+		token, err := authUseCase.LoginWithGoogle("valid-code")
+
+		assert.Error(t, err, users.FailerToCreateUserError)
+		assert.Empty(t, token)
+	})
+
+	t.Run("should login successfully if user does not exist and is created", func(t *testing.T) {
+		mockGoogle := new(mockServices.MockGoogleService)
+		mockRepo := new(mockUsers.MockUsersRepo)
+		usersUC := users.NewUsersUseCase(mockRepo)
+		uc := auth.NewAuthUseCase(mockGoogle, usersUC)
+
+		emailVerified := true
+		email := "newuser@gmail.com"
+		mockGoogle.On("GetUserInfo", "token").Return(&services.GoogleUserInfo{
+			Name:          "New User",
+			Email:         &email,
+			EmailVerified: &emailVerified,
+		}, nil)
+
+		mockRepo.
+			On("ListUsers", mock.Anything).
+			Return([]users.User{}, nil)
+
+		createdUser := users.User{ID: "2", Name: "New User", Email: email}
+		mockRepo.On("CreateUser", users.CreateUserInput{
+			Name:  "New User",
+			Email: email,
+		}).Return(createdUser, nil)
+
+		user, err := uc.LoginWithGoogle("token")
+		assert.NoError(t, err)
+		assert.Equal(t, createdUser, user)
+		mockGoogle.AssertExpectations(t)
+		mockRepo.AssertExpectations(t)
+	})
+}

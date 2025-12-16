@@ -1,0 +1,229 @@
+package e2e
+
+import (
+	"bytes"
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"rango-backend/resources/auth"
+	"rango-backend/services"
+	"rango-backend/services/mocks"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func setupTestServer(db *sql.DB, googleService services.GoogleService, jwtService services.JWTService) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+
+	handler := auth.NewHandler(db, googleService, jwtService)
+	authGroup := router.Group("/api/v1/auth")
+	{
+		authGroup.POST("/login/google", handler.LoginGoogle)
+	}
+
+	return router
+}
+
+func TestE2eAuth(t *testing.T) {
+	pg := SetupTestDB(t)
+	defer pg.Container.Terminate(context.Background())
+	defer pg.DB.Close()
+
+	t.Log("postgres started with:", pg.ConnString)
+
+	t.Run("should verify database is empty initially", func(t *testing.T) {
+		var count int
+		err := pg.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+
+		assert.NoError(t, err)
+		assert.Equal(t, 0, count)
+	})
+
+	t.Run("should create user when login with Google for the first time", func(t *testing.T) {
+		mockGoogleService := new(mocks.MockGoogleService)
+		mockJWTService := new(mocks.MockJWTService)
+
+		accessToken := "mock-access-token"
+		mockGoogleService.
+			On("GetUserAccessToken", "valid-code").
+			Return(&accessToken, nil)
+
+		email := "test@example.com"
+		emailVerified := true
+		picture := "https://example.com/avatar.jpg"
+		mockGoogleService.
+			On("GetUserInfo", accessToken).
+			Return(&services.GoogleUserInfo{
+				Sub:           "google-sub-123",
+				Name:          "Test User",
+				Email:         &email,
+				EmailVerified: &emailVerified,
+				Picture:       &picture,
+			}, nil)
+		mockJWTService.On("GenerateToken", mock.Anything).Return("mock-token", nil)
+
+		router := setupTestServer(pg.DB, mockGoogleService, mockJWTService)
+
+		body := auth.LoginGoogleRequest{Code: "valid-code"}
+		bodyJSON, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login/google", bytes.NewBuffer(bodyJSON))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+
+		var response map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.NotNil(t, response["user"])
+		assert.NotEmpty(t, response["access_token"])
+
+		var count int
+		err = pg.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", email).Scan(&count)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, count, "should have exactly one user with this email")
+
+		var dbUser struct {
+			ID        string
+			Name      string
+			Email     string
+			AvatarURL string
+			Username  string
+		}
+		err = pg.DB.QueryRow(
+			"SELECT id, name, email, avatar_url, username FROM users WHERE email = $1",
+			email,
+		).Scan(&dbUser.ID, &dbUser.Name, &dbUser.Email, &dbUser.AvatarURL, &dbUser.Username)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, dbUser.ID)
+		assert.Equal(t, "Test User", dbUser.Name)
+		assert.Equal(t, email, dbUser.Email)
+		assert.Equal(t, picture, dbUser.AvatarURL)
+		assert.NotEmpty(t, dbUser.Username)
+
+		mockGoogleService.AssertExpectations(t)
+	})
+
+	t.Run("should return existing user when login with Google for second time", func(t *testing.T) {
+		email := "test@example.com"
+		var count int
+		err := pg.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", email).Scan(&count)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, count, "user should already exist before testing second login")
+
+		mockGoogleService := new(mocks.MockGoogleService)
+		mockJWTService := new(mocks.MockJWTService)
+
+		accessToken := "mock-access-token"
+		mockGoogleService.
+			On("GetUserAccessToken", "valid-code").
+			Return(&accessToken, nil)
+
+		emailVerified := true
+		picture := "https://example.com/avatar.jpg"
+		mockGoogleService.
+			On("GetUserInfo", accessToken).
+			Return(&services.GoogleUserInfo{
+				Sub:           "google-sub-123",
+				Name:          "Test User",
+				Email:         &email,
+				EmailVerified: &emailVerified,
+				Picture:       &picture,
+			}, nil)
+
+		mockJWTService.On("GenerateToken", mock.Anything).Return("mock-token", nil)
+
+		router := setupTestServer(pg.DB, mockGoogleService, mockJWTService)
+
+		body := auth.LoginGoogleRequest{Code: "valid-code"}
+		bodyJSON, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login/google", bytes.NewBuffer(bodyJSON))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var response map[string]interface{}
+		err = json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.NotNil(t, response["user"])
+		assert.NotEmpty(t, response["access_token"])
+
+		err = pg.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", email).Scan(&count)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, count, "should have exactly one user with this email")
+
+		var dbUser struct {
+			ID        string
+			Name      string
+			Email     string
+			AvatarURL string
+			Username  string
+		}
+		err = pg.DB.QueryRow(
+			"SELECT id, name, email, avatar_url, username FROM users WHERE email = $1",
+			email,
+		).Scan(&dbUser.ID, &dbUser.Name, &dbUser.Email, &dbUser.AvatarURL, &dbUser.Username)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, dbUser.ID)
+		assert.Equal(t, "Test User", dbUser.Name)
+		assert.Equal(t, email, dbUser.Email)
+		assert.Equal(t, picture, dbUser.AvatarURL)
+		assert.NotEmpty(t, dbUser.Username)
+
+		mockGoogleService.AssertExpectations(t)
+	})
+
+	// should reject invalid code and not create a new user
+	t.Run("should reject invalid code and not create user", func(t *testing.T) {
+		mockGoogleService := new(mocks.MockGoogleService)
+		mockJWTService := new(mocks.MockJWTService)
+
+		mockGoogleService.
+			On("GetUserAccessToken", "invalid-code").
+			Return((*string)(nil), errors.New("invalid code"))
+
+		router := setupTestServer(pg.DB, mockGoogleService, mockJWTService)
+
+		body := auth.LoginGoogleRequest{Code: "invalid-code"}
+		bodyJSON, _ := json.Marshal(body)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login/google", bytes.NewBuffer(bodyJSON))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+		var resp map[string]interface{}
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+
+		_, hasUser := resp["user"]
+		assert.False(t, hasUser)
+		_, hasToken := resp["access_token"]
+		assert.False(t, hasToken)
+
+		var count int
+		err = pg.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, count, "no new user should be created on invalid code")
+
+		mockGoogleService.AssertExpectations(t)
+	})
+}
