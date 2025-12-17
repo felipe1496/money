@@ -35,7 +35,7 @@ func (uc *UsersUseCaseImpl) Create(input CreateUserInput) (User, error) {
 
 	user, err := uc.repo.CreateUser(input)
 	if err != nil {
-		return User{}, FailerToCreateUserError
+		return User{}, FailedToCreateUserError
 	}
 
 	return user, nil

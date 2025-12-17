@@ -1,10 +1,13 @@
 package users
 
-import "errors"
+import (
+	"net/http"
+	"rango-backend/utils"
+)
 
 var (
-	FailedToFetchUsersError = errors.New("failed to fetch users")
-	FailerToCreateUserError = errors.New("failed to create user")
-	UsernameAlreadyExists   = errors.New("username already taken")
-	EmailAlreadyExists      = errors.New("user with this email already exists")
+	FailedToFetchUsersError = utils.NewHTTPError(http.StatusInternalServerError, "failed to fetch users")
+	FailedToCreateUserError = utils.NewHTTPError(http.StatusInternalServerError, "failed to create user")
+	UsernameAlreadyExists   = utils.NewHTTPError(http.StatusConflict, "user with this username already exists")
+	EmailAlreadyExists      = utils.NewHTTPError(http.StatusConflict, "user with this email already exists")
 )

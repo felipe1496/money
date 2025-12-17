@@ -39,22 +39,22 @@ func (s *googleServiceImpl) GetUserInfo(accessToken string) (*GoogleUserInfo, er
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
-		return nil, ErrGoogleNetwork
+		return nil, FailedGoogleAuthenticationErr
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, ErrGoogleAuthFailed
+		return nil, FailedGoogleAuthenticationErr
 	}
 
 	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, ErrGoogleResponse
+		return nil, FailedGoogleAuthenticationErr
 	}
 
 	var user GoogleUserInfo
 	if err := json.Unmarshal(bodyBytes, &user); err != nil {
-		return nil, ErrGoogleDecode
+		return nil, FailedGoogleAuthenticationErr
 	}
 
 	return &user, nil
@@ -74,7 +74,7 @@ func (s *googleServiceImpl) GetUserAccessToken(code string) (*string, error) {
 		strings.NewReader(data.Encode()),
 	)
 	if err != nil {
-		return nil, err
+		return nil, FailedGoogleAuthenticationErr
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -82,13 +82,18 @@ func (s *googleServiceImpl) GetUserAccessToken(code string) (*string, error) {
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, FailedGoogleAuthenticationErr
 	}
+
+	if res.StatusCode != http.StatusOK {
+		return nil, FailedGoogleAuthenticationErr
+	}
+
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, FailedGoogleAuthenticationErr
 	}
 
 	var response struct {
@@ -96,7 +101,7 @@ func (s *googleServiceImpl) GetUserAccessToken(code string) (*string, error) {
 	}
 
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, err
+		return nil, FailedGoogleAuthenticationErr
 	}
 
 	return &response.AccessToken, nil

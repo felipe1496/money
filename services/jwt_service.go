@@ -2,7 +2,9 @@ package services
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"rango-backend/utils"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -32,7 +34,13 @@ func (s *JWTServiceImpl) GenerateToken(userID string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(s.jwtSecret))
+	signedToken, err := token.SignedString([]byte(s.jwtSecret))
+
+	if err != nil {
+		return "", utils.NewHTTPError(http.StatusInternalServerError, "failed to generate JWT token")
+	}
+
+	return signedToken, nil
 }
 
 func (s *JWTServiceImpl) ValidateToken(tokenString string) (string, error) {
@@ -45,25 +53,27 @@ func (s *JWTServiceImpl) ValidateToken(tokenString string) (string, error) {
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("erro ao fazer parse do token: %w", err)
+
+		return "", utils.NewHTTPError(http.StatusInternalServerError, "failed to parse JWT token")
 	}
 
 	if !token.Valid {
-		return "", fmt.Errorf("token inválido")
+		return "", utils.NewHTTPError(http.StatusUnauthorized, "invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", fmt.Errorf("erro ao extrair claims do token")
+		return "", utils.NewHTTPError(http.StatusInternalServerError, "failed to extract claims from token")
 	}
 
 	if iss, ok := claims["iss"].(string); !ok || iss != "money-api" {
-		return "", fmt.Errorf("issuer inválido")
+		return "", utils.NewHTTPError(http.StatusUnauthorized, "invalid issuer")
 	}
 
 	userID, ok := claims["sub"].(string)
 	if !ok {
-		return "", fmt.Errorf("claim 'sub' não encontrada ou inválida")
+
+		return "", utils.NewHTTPError(http.StatusInternalServerError, "failed to extract sub claim from token")
 	}
 
 	return userID, nil

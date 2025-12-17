@@ -2,7 +2,6 @@ package transactions
 
 import (
 	"database/sql"
-	"fmt"
 	"rango-backend/utils"
 )
 
@@ -70,7 +69,6 @@ func (uc *TransactionsUseCaseImpl) ListViewEntries(filter *utils.FilterBuilder) 
 	entries, err := uc.repo.ListViewEntries(uc.db, filter)
 
 	if err != nil {
-		fmt.Println("aaa: ", err.Error())
 		return []ViewEntry{}, ErrFailedToFetchEntries
 	}
 

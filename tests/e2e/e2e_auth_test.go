@@ -5,7 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"rango-backend/resources/auth"
@@ -59,6 +59,7 @@ func TestE2eAuth(t *testing.T) {
 		email := "test@example.com"
 		emailVerified := true
 		picture := "https://example.com/avatar.jpg"
+		mockGoogleService.On("GetUserAccessToken", "valid-code").Return(&accessToken, nil)
 		mockGoogleService.
 			On("GetUserInfo", accessToken).
 			Return(&services.GoogleUserInfo{
@@ -80,14 +81,15 @@ func TestE2eAuth(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusCreated, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
 
-		var response map[string]interface{}
+		var response map[string]map[string]any
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
-
-		assert.NotNil(t, response["user"])
-		assert.NotEmpty(t, response["access_token"])
+		fmt.Println("response aqui: ", response)
+		assert.NotNil(t, response["data"])
+		assert.NotNil(t, response["data"]["user"])
+		assert.NotEmpty(t, response["data"]["access_token"])
 
 		var count int
 		err = pg.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", email).Scan(&count)
@@ -156,12 +158,13 @@ func TestE2eAuth(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		var response map[string]interface{}
+		var response map[string]map[string]any
 		err = json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
 
-		assert.NotNil(t, response["user"])
-		assert.NotEmpty(t, response["access_token"])
+		assert.NotNil(t, response["data"])
+		assert.NotNil(t, response["data"]["user"])
+		assert.NotEmpty(t, response["data"]["access_token"])
 
 		err = pg.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", email).Scan(&count)
 		assert.NoError(t, err)
@@ -194,9 +197,10 @@ func TestE2eAuth(t *testing.T) {
 		mockGoogleService := new(mocks.MockGoogleService)
 		mockJWTService := new(mocks.MockJWTService)
 
+		emptyAccessToken := ""
 		mockGoogleService.
 			On("GetUserAccessToken", "invalid-code").
-			Return((*string)(nil), errors.New("invalid code"))
+			Return(&emptyAccessToken, services.FailedGoogleAuthenticationErr)
 
 		router := setupTestServer(pg.DB, mockGoogleService, mockJWTService)
 
@@ -208,19 +212,10 @@ func TestE2eAuth(t *testing.T) {
 
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
-
-		var resp map[string]interface{}
-		err := json.Unmarshal(w.Body.Bytes(), &resp)
-		assert.NoError(t, err)
-
-		_, hasUser := resp["user"]
-		assert.False(t, hasUser)
-		_, hasToken := resp["access_token"]
-		assert.False(t, hasToken)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
 
 		var count int
-		err = pg.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+		err := pg.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, count, "no new user should be created on invalid code")
 

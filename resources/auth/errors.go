@@ -1,10 +1,13 @@
 package auth
 
-import "errors"
+import (
+	"net/http"
+	"rango-backend/utils"
+)
 
 var (
-	GoogleAuthFailedErr       = errors.New("authentication with Google failed")
-	GoogleDintProvideEmailErr = errors.New("google did not provide an email")
-	JwtGenErr                 = errors.New("failed to generate JWT token")
-	GoogleEmailNotVerifiedErr = errors.New("google email is not verified")
+	GoogleAuthFailedErr       = utils.NewHTTPError(http.StatusUnauthorized, "authentication with Google failed")
+	GoogleDintProvideEmailErr = utils.NewHTTPError(http.StatusUnauthorized, "google did not provide an email")
+	JwtGenErr                 = utils.NewHTTPError(http.StatusUnauthorized, "failed to generate JWT token")
+	GoogleEmailNotVerifiedErr = utils.NewHTTPError(http.StatusUnauthorized, "Google email not verified")
 )

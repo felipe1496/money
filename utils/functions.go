@@ -2,18 +2,7 @@ package utils
 
 import (
 	"github.com/Masterminds/squirrel"
-	"github.com/gin-gonic/gin"
 )
-
-func ErrorResponse(status int, msg string) gin.H {
-	return gin.H{
-		"status": status,
-		"error": gin.H{
-			"message": msg,
-			"type":    StatusMessages[status],
-		},
-	}
-}
 
 func ApplyFilterToSquirrel(query squirrel.SelectBuilder, filter *FilterBuilder) (squirrel.SelectBuilder, error) {
 	if filter == nil {

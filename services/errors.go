@@ -1,12 +1,10 @@
 package services
 
 import (
-	"errors"
+	"net/http"
+	"rango-backend/utils"
 )
 
 var (
-	ErrGoogleNetwork    = errors.New("network error")
-	ErrGoogleAuthFailed = errors.New("authentication with Google failed")
-	ErrGoogleResponse   = errors.New("error reading Google response")
-	ErrGoogleDecode     = errors.New("error decoding Google user JSON")
+	FailedGoogleAuthenticationErr = utils.NewHTTPError(http.StatusUnauthorized, "google authentication failed")
 )

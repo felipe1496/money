@@ -1,12 +1,16 @@
 package auth
 
 import (
+	"fmt"
 	"rango-backend/resources/users"
 	"rango-backend/services"
+	"strings"
+
+	"github.com/oklog/ulid/v2"
 )
 
 type AuthUseCase interface {
-	LoginWithGoogle(accessToken string) (users.User, error)
+	LoginWithGoogle(code string) (users.User, error)
 }
 
 type AuthUseCaseImpl struct {
@@ -21,11 +25,17 @@ func NewAuthUseCase(googleService services.GoogleService, usersUseCase users.Use
 	}
 }
 
-func (uc *AuthUseCaseImpl) LoginWithGoogle(accessToken string) (users.User, error) {
-	userInfo, err := uc.googleService.GetUserInfo(accessToken)
+func (uc *AuthUseCaseImpl) LoginWithGoogle(code string) (users.User, error) {
+	userAccessToken, err := uc.googleService.GetUserAccessToken(code)
 
 	if err != nil {
-		return users.User{}, GoogleAuthFailedErr
+		return users.User{}, err
+	}
+
+	userInfo, err := uc.googleService.GetUserInfo(*userAccessToken)
+
+	if err != nil {
+		return users.User{}, err
 	}
 
 	if !*userInfo.EmailVerified {
@@ -52,6 +62,8 @@ func (uc *AuthUseCaseImpl) LoginWithGoogle(accessToken string) (users.User, erro
 		createUserInput.Email = *userInfo.Email
 
 		createUserInput.AvatarURL = userInfo.Picture
+
+		createUserInput.Username = fmt.Sprintf("%s_%s", strings.ToLower(strings.ReplaceAll(userInfo.Name, " ", "_")), ulid.Make().String())
 
 		createdUser, err := uc.usersUseCase.Create(createUserInput)
 

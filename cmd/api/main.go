@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	docs "rango-backend/docs"
 	"rango-backend/resources/auth"
 	"rango-backend/resources/transactions"
 	"time"
@@ -9,10 +10,16 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title Money API
 func main() {
 	r := gin.Default()
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	// add swagger
+	r.GET("/api-docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	err := godotenv.Load()
 	if err != nil {

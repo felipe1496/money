@@ -1,0 +1,82 @@
+definitions:
+  auth.LoginGoogleRequest:
+    properties:
+      code:
+        type: string
+    type: object
+  auth.LoginGoogleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/auth.LoginGoogleResponseData'
+    type: object
+  auth.LoginGoogleResponseData:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/users.User'
+    type: object
+  users.User:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      username:
+        type: string
+    type: object
+  utils.HTTPError:
+    properties:
+      error:
+        $ref: '#/definitions/utils.HTTPErrorData'
+      status:
+        type: integer
+    type: object
+  utils.HTTPErrorData:
+    properties:
+      message:
+        type: string
+      type:
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Money API
+paths:
+  /auth/login/google:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user with Google OAuth
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginGoogleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in
+          schema:
+            $ref: '#/definitions/auth.LoginGoogleResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      summary: Login with Google
+      tags:
+      - auth
+swagger: "2.0"

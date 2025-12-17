@@ -24,7 +24,8 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 	err := ctx.ShouldBindJSON(&body)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(http.StatusInternalServerError, err.Error()))
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
+		ctx.JSON(apiErr.StatusCode, apiErr)
 		return
 	}
 
@@ -37,14 +38,16 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(http.StatusInternalServerError, err.Error()))
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
 		return
 	}
 
 	entries, err := api.transactionsUseCase.ListViewEntries(utils.CreateFilter().And("transaction_id", "eq", id))
 
 	if err != nil {
-		ctx.JSON(http.StatusCreated, utils.ErrorResponse(http.StatusCreated, "Transaction create but it was not possible to get it"))
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
 		return
 	}
 
@@ -66,7 +69,8 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 	entries, err := api.transactionsUseCase.ListViewEntries(filter)
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(http.StatusInternalServerError, err.Error()))
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
 		return
 	}
 
@@ -75,7 +79,8 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 		And("period", "eq", period))
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, utils.ErrorResponse(http.StatusInternalServerError, err.Error()))
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
 		return
 	}
 
