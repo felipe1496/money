@@ -13,6 +13,8 @@ type TransactionsRepo interface {
 	CreateTransaction(payload CreateTransactionDTO, db utils.Executer) (Transaction, error)
 	ListViewEntries(db utils.Executer, filter *utils.FilterBuilder) ([]ViewEntry, error)
 	CountViewEntries(db utils.Executer, filter *utils.FilterBuilder) (int, error)
+	DeleteTransactionById(db utils.Executer, id string) error
+	ListTransactions(db utils.Executer, filter *utils.FilterBuilder) ([]Transaction, error)
 }
 
 type TransactionsRepoImpl struct {
@@ -146,4 +148,61 @@ func (r *TransactionsRepoImpl) CountViewEntries(db utils.Executer, filter *utils
 	}
 
 	return count, nil
+}
+
+func (r *TransactionsRepoImpl) DeleteTransactionById(db utils.Executer, id string) error {
+	sql, args, err := squirrel.Delete("transactions").
+		Where(squirrel.Eq{"id": id}).
+		PlaceholderFormat(squirrel.Dollar).
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(sql, args...)
+
+	return err
+}
+
+func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils.FilterBuilder) ([]Transaction, error) {
+	query := squirrel.Select("id", "user_id", "category", "name", "description", "created_at").
+		From("transactions").PlaceholderFormat(squirrel.Dollar)
+
+	query, err := utils.ApplyFilterToSquirrel(query, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sql, args, err := query.ToSql()
+	fmt.Println(sql, args)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Query(sql, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var transactions []Transaction
+	for rows.Next() {
+		var transaction Transaction
+		if err := rows.Scan(
+			&transaction.ID,
+			&transaction.UserID,
+			&transaction.Type,
+			&transaction.Name,
+			&transaction.Description,
+			&transaction.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, transaction)
+	}
+	fmt.Println("aqui: ", transactions)
+	return transactions, nil
 }

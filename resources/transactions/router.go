@@ -14,16 +14,19 @@ func Router(router *gin.Engine) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	jwtService := services.NewJWTService()
 	handler := NewHandler(db)
 	transactionsGroup := router.Group("/api/v1/transactions")
 	{
 		transactionsGroup.POST("/simple-expense",
-			middlewares.RequireAuthMiddleware(services.NewJWTService()),
+			middlewares.RequireAuthMiddleware(jwtService),
 			handler.CreateSimpleExpense)
 		transactionsGroup.GET("/entries/:period",
-			middlewares.RequireAuthMiddleware(services.NewJWTService()),
+			middlewares.RequireAuthMiddleware(jwtService),
 			middlewares.QueryOptsMiddleware(),
 			handler.ListViewEntries)
+		transactionsGroup.DELETE("/:transaction_id",
+			middlewares.RequireAuthMiddleware(jwtService),
+			handler.DeleteTransaction)
 	}
 }

@@ -105,3 +105,29 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 		},
 	})
 }
+
+// @Summary Delete Transaction By ID
+// @Description Delete a transaction and all entries related by the ID of the transaction
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param transaction_id path string true "transaction ID"
+// @Success 204 "Transaction deleted"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 404 {object} utils.HTTPError "Not found"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/{transaction_id} [delete]
+func (api *API) DeleteTransaction(ctx *gin.Context) {
+	id := ctx.Param("transaction_id")
+
+	err := api.transactionsUseCase.DeleteTransactionById(id)
+
+	if err != nil {
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}

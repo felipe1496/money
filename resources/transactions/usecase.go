@@ -9,6 +9,7 @@ type TransactionsUseCase interface {
 	CreateSimpleTransaction(payload CreateSimpleExpenseDTO) (string, error)
 	ListViewEntries(filter *utils.FilterBuilder) ([]ViewEntry, error)
 	CountViewEntries(filter *utils.FilterBuilder) (int, error)
+	DeleteTransactionById(id string) error
 }
 
 type TransactionsUseCaseImpl struct {
@@ -83,4 +84,24 @@ func (uc *TransactionsUseCaseImpl) CountViewEntries(filter *utils.FilterBuilder)
 	}
 
 	return count, nil
+}
+
+func (uc *TransactionsUseCaseImpl) DeleteTransactionById(id string) error {
+	transactionExists, err := uc.repo.ListTransactions(uc.db, utils.CreateFilter().And("id", "eq", id))
+
+	if err != nil {
+		return AnErrorOccuredWhileFetchingTransactions
+	}
+
+	if len(transactionExists) == 0 {
+		return TransactionNotFound
+	}
+
+	err = uc.repo.DeleteTransactionById(uc.db, id)
+
+	if err != nil {
+		return ItWasNotPossibleDeleteTransactionErr
+	}
+
+	return nil
 }

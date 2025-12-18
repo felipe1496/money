@@ -15,6 +15,9 @@ import (
 )
 
 // @title Money API
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	r := gin.Default()
 	docs.SwaggerInfo.BasePath = "/api/v1"

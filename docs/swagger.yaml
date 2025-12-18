@@ -79,4 +79,42 @@ paths:
       summary: Login with Google
       tags:
       - auth
+  /transactions/{transaction_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a transaction and all entries related by the ID of the transaction
+      parameters:
+      - description: transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Transaction deleted
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Delete Transaction By ID
+      tags:
+      - transactions
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
