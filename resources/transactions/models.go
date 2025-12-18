@@ -8,7 +8,7 @@ package transactions
 // Request body to create a simple expense
 type CreateSimpleExpenseRequest struct {
 	Name        string  `json:"name" binding:"required"`
-	Amount      float64 `json:"amount" binding:"required"`
+	Amount      float64 `json:"amount" binding:"required,lt=0,gte=-999999"`
 	Period      string  `json:"period" binding:"required,len=6"`
 	Description string  `json:"description" biding:"min=0,max=400"`
 }
@@ -60,6 +60,7 @@ type ViewEntry struct {
 	TotalAmount       float64         `json:"total_amount"`
 	Installment       int             `json:"installment"`
 	TotalInstallments int             `json:"total_installments"`
+	CreatedAt         string          `json:"created_at"`
 }
 
 // Entries table record

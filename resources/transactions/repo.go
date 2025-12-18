@@ -70,7 +70,7 @@ func (r *TransactionsRepoImpl) CreateTransaction(payload CreateTransactionDTO, d
 }
 
 func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.FilterBuilder) ([]ViewEntry, error) {
-	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments").
+	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments", "created_at").
 		From("v_entries").
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -108,6 +108,7 @@ func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.
 			&entry.TotalAmount,
 			&entry.Installment,
 			&entry.TotalInstallments,
+			&entry.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

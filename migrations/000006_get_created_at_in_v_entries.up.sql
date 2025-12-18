@@ -1,0 +1,20 @@
+create or replace view v_entries as
+select
+	e.id,
+    e.transaction_id,
+	t.name,
+	t.description,
+	e.amount,
+	e.period,
+	t.user_id,
+	t.category,
+	sum(e.amount) over (partition by e.transaction_id) as total_amount,
+	row_number() over (partition by e.transaction_id
+order by
+	e.period) as installment,
+	count(*) over (partition by e.transaction_id) as total_installments,
+    e.created_at
+from
+	entries e
+join transactions t on
+	e.transaction_id = t.id;
