@@ -8,7 +8,15 @@ package transactions
 // Request body to create a simple expense
 type CreateSimpleExpenseRequest struct {
 	Name        string  `json:"name" binding:"required"`
-	Amount      float64 `json:"amount" binding:"required,lt=0,gte=-999999"`
+	Amount      float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	Period      string  `json:"period" binding:"required,len=6"`
+	Description string  `json:"description" biding:"min=0,max=400"`
+}
+
+// Request body to create an income
+type CreateIncomeRequest struct {
+	Name        string  `json:"name" binding:"required"`
+	Amount      float64 `json:"amount" binding:"required,gte=0,lte=999999"`
 	Period      string  `json:"period" binding:"required,len=6"`
 	Description string  `json:"description" biding:"min=0,max=400"`
 }
@@ -35,6 +43,14 @@ type CreateEntryDTO struct {
 
 // Payload to the use case create a simple expense
 type CreateSimpleExpenseDTO struct {
+	Name        string
+	Amount      float64
+	Period      string
+	Description string
+	UserID      string
+}
+
+type CreateIncomeDTO struct {
 	Name        string
 	Amount      float64
 	Period      string

@@ -28,5 +28,8 @@ func Router(router *gin.Engine) {
 		transactionsGroup.DELETE("/:transaction_id",
 			middlewares.RequireAuthMiddleware(jwtService),
 			handler.DeleteTransaction)
+		transactionsGroup.POST("/income",
+			middlewares.RequireAuthMiddleware(jwtService),
+			handler.CreateIncome)
 	}
 }

@@ -29,7 +29,58 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 		return
 	}
 
-	id, err := api.transactionsUseCase.CreateSimpleTransaction(CreateSimpleExpenseDTO{
+	id, err := api.transactionsUseCase.CreateSimpleExpense(CreateSimpleExpenseDTO{
+		Name:        body.Name,
+		Amount:      body.Amount,
+		Period:      body.Period,
+		Description: body.Description,
+		UserID:      ctx.GetString("user_id"),
+	})
+
+	if err != nil {
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	entries, err := api.transactionsUseCase.ListViewEntries(utils.CreateFilter().And("transaction_id", "eq", id))
+
+	if err != nil {
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{
+		"data": gin.H{
+			"entry": entries[0],
+		},
+	})
+}
+
+// @Summary Create an income
+// @Description Create an income transactions and entry
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body CreateIncomeRequest true "Income payload"
+// @Success 201 "Income transaction created"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/income [post]
+func (api *API) CreateIncome(ctx *gin.Context) {
+	var body CreateIncomeRequest
+
+	err := ctx.ShouldBindJSON(&body)
+
+	if err != nil {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	id, err := api.transactionsUseCase.CreateIncome(CreateIncomeDTO{
 		Name:        body.Name,
 		Amount:      body.Amount,
 		Period:      body.Period,

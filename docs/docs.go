@@ -61,6 +61,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/transactions/income": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create an income transactions and entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Create an income",
+                "parameters": [
+                    {
+                        "description": "Income payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateIncomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Income transaction created"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/{transaction_id}": {
             "delete": {
                 "security": [
@@ -139,6 +187,30 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/users.User"
+                }
+            }
+        },
+        "transactions.CreateIncomeRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "name",
+                "period"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "maximum": 999999,
+                    "minimum": 0
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
                 }
             }
         },

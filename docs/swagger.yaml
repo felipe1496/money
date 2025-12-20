@@ -16,6 +16,23 @@ definitions:
       user:
         $ref: '#/definitions/users.User'
     type: object
+  transactions.CreateIncomeRequest:
+    properties:
+      amount:
+        maximum: 999999
+        minimum: 0
+        type: number
+      description:
+        type: string
+      name:
+        type: string
+      period:
+        type: string
+    required:
+    - amount
+    - name
+    - period
+    type: object
   users.User:
     properties:
       avatar_url:
@@ -110,6 +127,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Delete Transaction By ID
+      tags:
+      - transactions
+  /transactions/income:
+    post:
+      consumes:
+      - application/json
+      description: Create an income transactions and entry
+      parameters:
+      - description: Income payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.CreateIncomeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Income transaction created
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Create an income
       tags:
       - transactions
 securityDefinitions:
