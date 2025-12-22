@@ -2,6 +2,7 @@ package auth
 
 import (
 	"log"
+	"os"
 	"rango-backend/db"
 	"rango-backend/services"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func Router(router *gin.Engine) {
-	db, err := db.Conn("postgres://docker:docker@localhost:5432/docker?sslmode=disable")
+	db, err := db.Conn(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
