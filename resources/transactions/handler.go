@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"rango-backend/utils"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -181,4 +182,48 @@ func (api *API) DeleteTransaction(ctx *gin.Context) {
 	}
 
 	ctx.Status(http.StatusNoContent)
+}
+
+// @Summary Create an installment
+// @Description Create an installment transactions and entries
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body CreateInstallmentRequest true "Installment payload"
+// @Success 201 "Transaction created"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/installment [post]
+func (api *API) CreateInstallment(ctx *gin.Context) {
+	var body CreateInstallmentRequest
+
+	err := ctx.ShouldBindJSON(&body)
+
+	if err != nil {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	if _, err := time.Parse("200601", body.Period); err != nil {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, "Invalid period format. Expected YYYYMM.")
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	entries, err := api.transactionsUseCase.CreateInstallment(CreateInstallmentDTO{
+		Name:              body.Name,
+		TotalAmount:       body.TotalAmount,
+		TotalInstallments: body.TotalInstallments,
+		Period:            body.Period,
+		Description:       body.Description,
+		UserID:            ctx.GetString("user_id"),
+	})
+
+	ctx.JSON(http.StatusCreated, CreateInstallmentResponse{
+		Data: CreateInstallmentResponseData{
+			Entries: entries,
+		},
+	})
 }

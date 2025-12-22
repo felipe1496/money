@@ -2,6 +2,7 @@ package transactions
 
 import (
 	"database/sql"
+	"net/http"
 	"rango-backend/utils"
 )
 
@@ -11,6 +12,7 @@ type TransactionsUseCase interface {
 	CountViewEntries(filter *utils.FilterBuilder) (int, error)
 	DeleteTransactionById(id string) error
 	CreateIncome(payload CreateIncomeDTO) (string, error)
+	CreateInstallment(payload CreateInstallmentDTO) ([]ViewEntry, error)
 }
 
 type TransactionsUseCaseImpl struct {
@@ -151,4 +153,61 @@ func (uc *TransactionsUseCaseImpl) CreateIncome(payload CreateIncomeDTO) (string
 	}
 
 	return transaction.ID, nil
+}
+
+func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDTO) ([]ViewEntry, error) {
+	conn, err := uc.db.Begin()
+
+	if err != nil {
+		return []ViewEntry{}, utils.NewHTTPError(http.StatusInternalServerError, "An error occurred while trying to start a connection with the database")
+	}
+
+	defer func() {
+		if err != nil {
+			conn.Rollback()
+			return
+		}
+	}()
+
+	transaction, err := uc.repo.CreateTransaction(CreateTransactionDTO{
+		UserID:      payload.UserID,
+		Type:        Installment,
+		Name:        payload.Name,
+		Description: &payload.Description,
+	}, conn)
+
+	if err != nil {
+		return []ViewEntry{}, utils.NewHTTPError(http.StatusInternalServerError, "An error occurred while trying to create the transaction")
+	}
+	totalAmountCents := int(payload.TotalAmount * 100)
+
+	baseTotalAmount := totalAmountCents / payload.TotalInstallments
+	rest := totalAmountCents % payload.TotalInstallments
+
+	for i := 0; i < payload.TotalInstallments; i++ {
+		nextPeriod, _ := utils.AddMonths(payload.Period, i)
+		amount := baseTotalAmount
+		if i == 0 {
+			amount += rest
+		}
+		entryDTO := CreateEntryDTO{
+			TransactionID: transaction.ID,
+			Amount:        float64(amount) / 100,
+			Period:        nextPeriod,
+		}
+
+		_, err = uc.repo.CreateEntry(entryDTO, conn)
+	}
+
+	if err != nil {
+		return []ViewEntry{}, err
+	}
+
+	if err := conn.Commit(); err != nil {
+		return []ViewEntry{}, err
+	}
+
+	entries, _ := uc.ListViewEntries(utils.CreateFilter().And("transaction_id", "eq", transaction.ID))
+
+	return entries, nil
 }

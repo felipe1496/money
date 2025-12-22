@@ -33,6 +33,28 @@ definitions:
     - name
     - period
     type: object
+  transactions.CreateInstallmentRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      period:
+        type: string
+      total_amount:
+        maximum: 999999
+        minimum: 0
+        type: number
+      total_installments:
+        maximum: 100
+        minimum: 1
+        type: integer
+    required:
+    - name
+    - period
+    - total_amount
+    - total_installments
+    type: object
   users.User:
     properties:
       avatar_url:
@@ -157,6 +179,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Create an income
+      tags:
+      - transactions
+  /transactions/installment:
+    post:
+      consumes:
+      - application/json
+      description: Create an installment transactions and entries
+      parameters:
+      - description: Installment payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.CreateInstallmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Transaction created
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Create an installment
       tags:
       - transactions
 securityDefinitions:

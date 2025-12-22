@@ -21,6 +21,23 @@ type CreateIncomeRequest struct {
 	Description string  `json:"description" biding:"min=0,max=400"`
 }
 
+// Request body to create an installment
+type CreateInstallmentRequest struct {
+	Name              string  `json:"name" binding:"required"`
+	TotalAmount       float64 `json:"total_amount" binding:"required,gte=0,lte=999999"`
+	TotalInstallments int     `json:"total_installments" binding:"required,gte=1,lte=100"`
+	Period            string  `json:"period" binding:"required,len=6"`
+	Description       string  `json:"description" biding:"min=0,max=400"`
+}
+
+type CreateInstallmentResponse struct {
+	Data CreateInstallmentResponseData `json:"data"`
+}
+
+type CreateInstallmentResponseData struct {
+	Entries []ViewEntry `json:"entries"`
+}
+
 // ==============================================================================
 // 2. DTO MODELS
 //    Models that represents data transfer objects between api layers
@@ -56,6 +73,15 @@ type CreateIncomeDTO struct {
 	Period      string
 	Description string
 	UserID      string
+}
+
+type CreateInstallmentDTO struct {
+	Name              string
+	TotalAmount       float64
+	TotalInstallments int
+	Period            string
+	Description       string
+	UserID            string
 }
 
 // ==============================================================================

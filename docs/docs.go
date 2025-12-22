@@ -109,6 +109,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/transactions/installment": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create an installment transactions and entries",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Create an installment",
+                "parameters": [
+                    {
+                        "description": "Installment payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateInstallmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Transaction created"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/{transaction_id}": {
             "delete": {
                 "security": [
@@ -211,6 +259,36 @@ const docTemplate = `{
                 },
                 "period": {
                     "type": "string"
+                }
+            }
+        },
+        "transactions.CreateInstallmentRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "period",
+                "total_amount",
+                "total_installments"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number",
+                    "maximum": 999999,
+                    "minimum": 0
+                },
+                "total_installments": {
+                    "type": "integer",
+                    "maximum": 100,
+                    "minimum": 1
                 }
             }
         },

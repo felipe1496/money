@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"time"
+
 	"github.com/Masterminds/squirrel"
 )
 
@@ -35,4 +37,16 @@ func ApplyFilterToSquirrel(query squirrel.SelectBuilder, filter *FilterBuilder) 
 	}
 
 	return query, nil
+}
+
+func AddMonths(period string, monthsToAdd int) (string, error) {
+	t, err := time.Parse("200601", period)
+
+	if err != nil {
+		return "", err
+	}
+
+	t = t.AddDate(0, monthsToAdd, 0)
+
+	return t.Format("200601"), nil
 }

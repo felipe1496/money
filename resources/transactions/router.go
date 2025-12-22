@@ -31,5 +31,8 @@ func Router(router *gin.Engine) {
 		transactionsGroup.POST("/income",
 			middlewares.RequireAuthMiddleware(jwtService),
 			handler.CreateIncome)
+		transactionsGroup.POST("/installment",
+			middlewares.RequireAuthMiddleware(jwtService),
+			handler.CreateInstallment)
 	}
 }
