@@ -4,20 +4,49 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Install migrate CLI
         run: |
           curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
           sudo mv migrate /usr/local/bin/
           migrate -version
-      
+
       - name: Run migrations
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           migrate -path ./migrations -database "$DATABASE_URL" up
+
+      - name: Create .env file
+        run: |
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+
+      - name: Login to docker hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build docker image
+        run: docker build -t yesterdaywalrus/money .
+
+      - name: Push image to docker hub
+        run: docker push yesterdaywalrus/money:latest
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull docker image
+        run: docker pull yesterdaywalrus/money:latest
+
+      - name: Run docker container
+        run: |
+          docker stop money-container || true
+          docker rm money-container || true
+          docker run -d --name money-container -p 8080:8080 --env-file .env yesterdaywalrus/money:latest
