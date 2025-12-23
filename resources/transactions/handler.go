@@ -115,7 +115,7 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 	page := ctx.GetInt("page")
 	perPage := ctx.GetInt("per_page")
 	filter := ctx.MustGet("filter").(*utils.FilterBuilder).And("user_id", "eq", userID).
-		And("period", "eq", period).OrderBy("created_at", "desc")
+		And("period", "eq", period).OrderBy("reference_date", "desc")
 
 	entries, err := api.transactionsUseCase.ListViewEntries(filter)
 
