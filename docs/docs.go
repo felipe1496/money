@@ -140,7 +140,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Transaction created"
+                        "description": "Transaction created",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateInstallmentResponse"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -243,7 +246,7 @@ const docTemplate = `{
             "required": [
                 "amount",
                 "name",
-                "period"
+                "reference_date"
             ],
             "properties": {
                 "amount": {
@@ -257,7 +260,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "period": {
+                "reference_date": {
                     "type": "string"
                 }
             }
@@ -266,7 +269,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "name",
-                "period",
+                "reference_date",
                 "total_amount",
                 "total_installments"
             ],
@@ -277,7 +280,7 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "period": {
+                "reference_date": {
                     "type": "string"
                 },
                 "total_amount": {
@@ -289,6 +292,82 @@ const docTemplate = `{
                     "type": "integer",
                     "maximum": 100,
                     "minimum": 1
+                }
+            }
+        },
+        "transactions.CreateInstallmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.CreateInstallmentResponseData"
+                }
+            }
+        },
+        "transactions.CreateInstallmentResponseData": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transactions.ViewEntry"
+                    }
+                }
+            }
+        },
+        "transactions.TransactionType": {
+            "type": "string",
+            "enum": [
+                "simple_expense",
+                "income",
+                "installment"
+            ],
+            "x-enum-varnames": [
+                "SimpleExpense",
+                "Income",
+                "Installment"
+            ]
+        },
+        "transactions.ViewEntry": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "installment": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "reference_date": {
+                    "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
+                },
+                "total_installments": {
+                    "type": "integer"
+                },
+                "transaction_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/transactions.TransactionType"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },

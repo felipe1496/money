@@ -59,7 +59,7 @@ func (uc *TransactionsUseCaseImpl) CreateSimpleExpense(payload CreateSimpleExpen
 	_, err = uc.repo.CreateEntry(CreateEntryDTO{
 		TransactionID: transaction.ID,
 		Amount:        payload.Amount,
-		Period:        payload.Period,
+		ReferenceDate: payload.ReferenceDate,
 	}, conn)
 
 	if err != nil {
@@ -141,7 +141,7 @@ func (uc *TransactionsUseCaseImpl) CreateIncome(payload CreateIncomeDTO) (string
 	_, err = uc.repo.CreateEntry(CreateEntryDTO{
 		TransactionID: transaction.ID,
 		Amount:        payload.Amount,
-		Period:        payload.Period,
+		ReferenceDate: payload.ReferenceDate,
 	}, conn)
 
 	if err != nil {
@@ -185,7 +185,7 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 	rest := totalAmountCents % payload.TotalInstallments
 
 	for i := 0; i < payload.TotalInstallments; i++ {
-		nextPeriod, _ := utils.AddMonths(payload.Period, i)
+		nextRefDate := payload.ReferenceDate.AddDate(0, i, 0)
 		amount := baseTotalAmount
 		if i == 0 {
 			amount += rest
@@ -193,7 +193,7 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 		entryDTO := CreateEntryDTO{
 			TransactionID: transaction.ID,
 			Amount:        float64(amount) / 100,
-			Period:        nextPeriod,
+			ReferenceDate: nextRefDate,
 		}
 
 		_, err = uc.repo.CreateEntry(entryDTO, conn)

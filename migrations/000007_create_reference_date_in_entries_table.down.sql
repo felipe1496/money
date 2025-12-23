@@ -1,0 +1,1 @@
+alter table entries drop column reference_date;

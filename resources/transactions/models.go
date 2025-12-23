@@ -1,5 +1,7 @@
 package transactions
 
+import "time"
+
 // ==============================================================================
 // 1. HTTP MODELS
 //    Models that represents request or response objects
@@ -7,27 +9,27 @@ package transactions
 
 // Request body to create a simple expense
 type CreateSimpleExpenseRequest struct {
-	Name        string  `json:"name" binding:"required"`
-	Amount      float64 `json:"amount" binding:"required,gte=0,lte=999999"`
-	Period      string  `json:"period" binding:"required,len=6"`
-	Description string  `json:"description" biding:"min=0,max=400"`
+	Name          string    `json:"name" binding:"required"`
+	Amount        float64   `json:"amount" binding:"required,gte=0,lte=999999"`
+	ReferenceDate time.Time `json:"reference_date" binding:"required"`
+	Description   string    `json:"description" biding:"min=0,max=400"`
 }
 
 // Request body to create an income
 type CreateIncomeRequest struct {
-	Name        string  `json:"name" binding:"required"`
-	Amount      float64 `json:"amount" binding:"required,gte=0,lte=999999"`
-	Period      string  `json:"period" binding:"required,len=6"`
-	Description string  `json:"description" biding:"min=0,max=400"`
+	Name          string    `json:"name" binding:"required"`
+	Amount        float64   `json:"amount" binding:"required,gte=0,lte=999999"`
+	ReferenceDate time.Time `json:"reference_date" binding:"required"`
+	Description   string    `json:"description" biding:"min=0,max=400"`
 }
 
 // Request body to create an installment
 type CreateInstallmentRequest struct {
-	Name              string  `json:"name" binding:"required"`
-	TotalAmount       float64 `json:"total_amount" binding:"required,gte=0,lte=999999"`
-	TotalInstallments int     `json:"total_installments" binding:"required,gte=1,lte=100"`
-	Period            string  `json:"period" binding:"required,len=6"`
-	Description       string  `json:"description" biding:"min=0,max=400"`
+	Name              string    `json:"name" binding:"required"`
+	TotalAmount       float64   `json:"total_amount" binding:"required,gte=0,lte=999999"`
+	TotalInstallments int       `json:"total_installments" binding:"required,gte=1,lte=100"`
+	ReferenceDate     time.Time `json:"reference_date" binding:"required"`
+	Description       string    `json:"description" biding:"min=0,max=400"`
 }
 
 type CreateInstallmentResponse struct {
@@ -55,31 +57,31 @@ type CreateTransactionDTO struct {
 type CreateEntryDTO struct {
 	TransactionID string
 	Amount        float64
-	Period        string
+	ReferenceDate time.Time
 }
 
 // Payload to the use case create a simple expense
 type CreateSimpleExpenseDTO struct {
-	Name        string
-	Amount      float64
-	Period      string
-	Description string
-	UserID      string
+	Name          string
+	Amount        float64
+	Description   string
+	ReferenceDate time.Time
+	UserID        string
 }
 
 type CreateIncomeDTO struct {
-	Name        string
-	Amount      float64
-	Period      string
-	Description string
-	UserID      string
+	Name          string
+	Amount        float64
+	ReferenceDate time.Time
+	Description   string
+	UserID        string
 }
 
 type CreateInstallmentDTO struct {
 	Name              string
 	TotalAmount       float64
 	TotalInstallments int
-	Period            string
+	ReferenceDate     time.Time
 	Description       string
 	UserID            string
 }
@@ -102,7 +104,8 @@ type ViewEntry struct {
 	TotalAmount       float64         `json:"total_amount"`
 	Installment       int             `json:"installment"`
 	TotalInstallments int             `json:"total_installments"`
-	CreatedAt         string          `json:"created_at"`
+	CreatedAt         time.Time       `json:"created_at"`
+	ReferenceDate     time.Time       `json:"reference_date"`
 }
 
 // Entries table record
@@ -110,8 +113,8 @@ type Entry struct {
 	ID            string
 	TransactionID string
 	Amount        float64
-	Period        string
-	CreatedAt     string
+	ReferenceDate time.Time
+	CreatedAt     time.Time
 }
 
 // Transactions table record
@@ -121,5 +124,5 @@ type Transaction struct {
 	Type        TransactionType
 	Name        string
 	Description string
-	CreatedAt   string
+	CreatedAt   time.Time
 }

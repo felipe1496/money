@@ -26,12 +26,12 @@ definitions:
         type: string
       name:
         type: string
-      period:
+      reference_date:
         type: string
     required:
     - amount
     - name
-    - period
+    - reference_date
     type: object
   transactions.CreateInstallmentRequest:
     properties:
@@ -39,7 +39,7 @@ definitions:
         type: string
       name:
         type: string
-      period:
+      reference_date:
         type: string
       total_amount:
         maximum: 999999
@@ -51,9 +51,60 @@ definitions:
         type: integer
     required:
     - name
-    - period
+    - reference_date
     - total_amount
     - total_installments
+    type: object
+  transactions.CreateInstallmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.CreateInstallmentResponseData'
+    type: object
+  transactions.CreateInstallmentResponseData:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/transactions.ViewEntry'
+        type: array
+    type: object
+  transactions.TransactionType:
+    enum:
+    - simple_expense
+    - income
+    - installment
+    type: string
+    x-enum-varnames:
+    - SimpleExpense
+    - Income
+    - Installment
+  transactions.ViewEntry:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      installment:
+        type: integer
+      name:
+        type: string
+      period:
+        type: string
+      reference_date:
+        type: string
+      total_amount:
+        type: number
+      total_installments:
+        type: integer
+      transaction_id:
+        type: string
+      type:
+        $ref: '#/definitions/transactions.TransactionType'
+      user_id:
+        type: string
     type: object
   users.User:
     properties:
@@ -198,6 +249,8 @@ paths:
       responses:
         "201":
           description: Transaction created
+          schema:
+            $ref: '#/definitions/transactions.CreateInstallmentResponse'
         "401":
           description: Unauthorized
           schema:

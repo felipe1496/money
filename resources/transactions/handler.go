@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"net/http"
 	"rango-backend/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,11 +30,11 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 	}
 
 	id, err := api.transactionsUseCase.CreateSimpleExpense(CreateSimpleExpenseDTO{
-		Name:        body.Name,
-		Amount:      body.Amount,
-		Period:      body.Period,
-		Description: body.Description,
-		UserID:      ctx.GetString("user_id"),
+		Name:          body.Name,
+		Amount:        body.Amount,
+		ReferenceDate: body.ReferenceDate,
+		Description:   body.Description,
+		UserID:        ctx.GetString("user_id"),
 	})
 
 	if err != nil {
@@ -82,11 +81,11 @@ func (api *API) CreateIncome(ctx *gin.Context) {
 	}
 
 	id, err := api.transactionsUseCase.CreateIncome(CreateIncomeDTO{
-		Name:        body.Name,
-		Amount:      body.Amount,
-		Period:      body.Period,
-		Description: body.Description,
-		UserID:      ctx.GetString("user_id"),
+		Name:          body.Name,
+		Amount:        body.Amount,
+		ReferenceDate: body.ReferenceDate,
+		Description:   body.Description,
+		UserID:        ctx.GetString("user_id"),
 	})
 
 	if err != nil {
@@ -191,7 +190,7 @@ func (api *API) DeleteTransaction(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body CreateInstallmentRequest true "Installment payload"
-// @Success 201 "Transaction created"
+// @Success 201 {object} CreateInstallmentResponse "Transaction created"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
 // @Failure 500 {object} utils.HTTPError "Internal server error"
 // @Router /transactions/installment [post]
@@ -206,17 +205,11 @@ func (api *API) CreateInstallment(ctx *gin.Context) {
 		return
 	}
 
-	if _, err := time.Parse("200601", body.Period); err != nil {
-		apiErr := utils.NewHTTPError(http.StatusBadRequest, "Invalid period format. Expected YYYYMM.")
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
 	entries, err := api.transactionsUseCase.CreateInstallment(CreateInstallmentDTO{
 		Name:              body.Name,
 		TotalAmount:       body.TotalAmount,
 		TotalInstallments: body.TotalInstallments,
-		Period:            body.Period,
+		ReferenceDate:     body.ReferenceDate,
 		Description:       body.Description,
 		UserID:            ctx.GetString("user_id"),
 	})
