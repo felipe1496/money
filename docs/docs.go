@@ -61,6 +61,311 @@ const docTemplate = `{
                 }
             }
         },
+        "/categories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List categories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "List categories",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "name",
+                        "description": "Sort field",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "asc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of categories",
+                        "schema": {
+                            "$ref": "#/definitions/categories.ListCategoriesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Create a category",
+                "parameters": [
+                    {
+                        "description": "Category payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/categories.CreateCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Category created",
+                        "schema": {
+                            "$ref": "#/definitions/categories.CreateCategoryResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{category_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Delete Category By ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Category deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/categories/{period}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List categories with amount per period",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "List categories with amount per period",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "period",
+                        "name": "period",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of categories with amount per period",
+                        "schema": {
+                            "$ref": "#/definitions/categories.ListCategoryAmountPerPeriodResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/entries/{period}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List a detailed view of entries joined with transactions for a given period",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "List entries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "period in format YYYYMM",
+                        "name": "period",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "name",
+                        "description": "Sort field",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "asc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "order",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of entries",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.ListEntriesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/income": {
             "post": {
                 "security": [
@@ -92,7 +397,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Income transaction created"
+                        "description": "Income transaction created",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateIncomeResponse"
+                        }
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -143,6 +451,57 @@ const docTemplate = `{
                         "description": "Transaction created",
                         "schema": {
                             "$ref": "#/definitions/transactions.CreateInstallmentResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/simple-expense": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a Simple Expense transaction and entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Create a Simple Expense",
+                "parameters": [
+                    {
+                        "description": "Simple Expense payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateSimpleExpenseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Simple Expense created",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateSimpleExpenseResponse"
                         }
                     },
                     "401": {
@@ -241,6 +600,121 @@ const docTemplate = `{
                 }
             }
         },
+        "categories.Category": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "categories.CategoryAmountPerPeriod": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "color": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "period": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "categories.CreateCategoryRequest": {
+            "type": "object",
+            "required": [
+                "color",
+                "name"
+            ],
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "categories.CreateCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/categories.CreateCategoryResponseData"
+                }
+            }
+        },
+        "categories.CreateCategoryResponseData": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/categories.Category"
+                }
+            }
+        },
+        "categories.ListCategoriesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/categories.ListCategoriesResponseData"
+                },
+                "query": {
+                    "$ref": "#/definitions/utils.QueryMeta"
+                }
+            }
+        },
+        "categories.ListCategoriesResponseData": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/categories.Category"
+                    }
+                }
+            }
+        },
+        "categories.ListCategoryAmountPerPeriodResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/categories.ListCategoryAmountPerPeriodResponseData"
+                }
+            }
+        },
+        "categories.ListCategoryAmountPerPeriodResponseData": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/categories.CategoryAmountPerPeriod"
+                    }
+                }
+            }
+        },
         "transactions.CreateIncomeRequest": {
             "type": "object",
             "required": [
@@ -262,6 +736,22 @@ const docTemplate = `{
                 },
                 "reference_date": {
                     "type": "string"
+                }
+            }
+        },
+        "transactions.CreateIncomeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.CreateIncomeResponseData"
+                }
+            }
+        },
+        "transactions.CreateIncomeResponseData": {
+            "type": "object",
+            "properties": {
+                "entry": {
+                    "$ref": "#/definitions/transactions.ViewEntry"
                 }
             }
         },
@@ -304,6 +794,68 @@ const docTemplate = `{
             }
         },
         "transactions.CreateInstallmentResponseData": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transactions.ViewEntry"
+                    }
+                }
+            }
+        },
+        "transactions.CreateSimpleExpenseRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "name",
+                "reference_date"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "maximum": 999999,
+                    "minimum": 0
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "reference_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "transactions.CreateSimpleExpenseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.CreateSimpleExpenseResponseData"
+                }
+            }
+        },
+        "transactions.CreateSimpleExpenseResponseData": {
+            "type": "object",
+            "properties": {
+                "entry": {
+                    "$ref": "#/definitions/transactions.ViewEntry"
+                }
+            }
+        },
+        "transactions.ListEntriesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.ListEntriesResponseData"
+                },
+                "query": {
+                    "$ref": "#/definitions/utils.QueryMeta"
+                }
+            }
+        },
+        "transactions.ListEntriesResponseData": {
             "type": "object",
             "properties": {
                 "entries": {
@@ -413,6 +965,26 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string"
+                }
+            }
+        },
+        "utils.QueryMeta": {
+            "type": "object",
+            "properties": {
+                "next_page": {
+                    "type": "boolean"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "per_page": {
+                    "type": "integer"
+                },
+                "total_items": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         }

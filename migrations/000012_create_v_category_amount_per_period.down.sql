@@ -1,0 +1,1 @@
+drop view if exists v_category_amount_per_period;

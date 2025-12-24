@@ -11,10 +11,10 @@ import (
 type TransactionsRepo interface {
 	CreateEntry(payload CreateEntryDTO, db utils.Executer) (Entry, error)
 	CreateTransaction(payload CreateTransactionDTO, db utils.Executer) (Transaction, error)
-	ListViewEntries(db utils.Executer, filter *utils.FilterBuilder) ([]ViewEntry, error)
-	CountViewEntries(db utils.Executer, filter *utils.FilterBuilder) (int, error)
+	ListViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) ([]ViewEntry, error)
+	CountViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error)
 	DeleteTransactionById(db utils.Executer, id string) error
-	ListTransactions(db utils.Executer, filter *utils.FilterBuilder) ([]Transaction, error)
+	ListTransactions(db utils.Executer, filter *utils.QueryOptsBuilder) ([]Transaction, error)
 }
 
 type TransactionsRepoImpl struct {
@@ -48,7 +48,6 @@ func (r *TransactionsRepoImpl) CreateEntry(payload CreateEntryDTO, db utils.Exec
 }
 
 func (r *TransactionsRepoImpl) CreateTransaction(payload CreateTransactionDTO, db utils.Executer) (Transaction, error) {
-
 	query, args, err := squirrel.Insert("transactions").
 		Columns("id", "user_id", "category", "name", "description").
 		Values(ulid.Make().String(), payload.UserID, payload.Type, payload.Name, &payload.Description).
@@ -71,15 +70,12 @@ func (r *TransactionsRepoImpl) CreateTransaction(payload CreateTransactionDTO, d
 	return transaction, err
 }
 
-func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.FilterBuilder) ([]ViewEntry, error) {
+func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) ([]ViewEntry, error) {
 	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments", "created_at", "reference_date").
 		From("v_entries").
 		PlaceholderFormat(squirrel.Dollar)
 
-	query, err := utils.ApplyFilterToSquirrel(query, filter)
-	if err != nil {
-		return nil, err
-	}
+	query = utils.QueryOptsToSquirrel(query, filter)
 
 	sql, args, err := query.ToSql()
 
@@ -121,20 +117,16 @@ func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.
 	return entries, nil
 }
 
-func (r *TransactionsRepoImpl) CountViewEntries(db utils.Executer, filter *utils.FilterBuilder) (int, error) {
+func (r *TransactionsRepoImpl) CountViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error) {
 	countQuery := squirrel.
 		Select("COUNT(*)").
 		From("v_entries").
 		PlaceholderFormat(squirrel.Dollar)
 
-	countQuery, err := utils.ApplyFilterToSquirrel(
+	countQuery = utils.QueryOptsToSquirrel(
 		countQuery,
 		filter,
 	)
-
-	if err != nil {
-		return 0, err
-	}
 
 	sql, args, err := countQuery.ToSql()
 	if err != nil {
@@ -166,15 +158,11 @@ func (r *TransactionsRepoImpl) DeleteTransactionById(db utils.Executer, id strin
 	return err
 }
 
-func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils.FilterBuilder) ([]Transaction, error) {
+func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils.QueryOptsBuilder) ([]Transaction, error) {
 	query := squirrel.Select("id", "user_id", "category", "name", "description", "created_at").
 		From("transactions").PlaceholderFormat(squirrel.Dollar)
 
-	query, err := utils.ApplyFilterToSquirrel(query, filter)
-
-	if err != nil {
-		return nil, err
-	}
+	query = utils.QueryOptsToSquirrel(query, filter)
 
 	sql, args, err := query.ToSql()
 	fmt.Println(sql, args)
@@ -204,6 +192,6 @@ func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils
 		}
 		transactions = append(transactions, transaction)
 	}
-	fmt.Println("aqui: ", transactions)
+
 	return transactions, nil
 }

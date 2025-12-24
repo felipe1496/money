@@ -1,6 +1,9 @@
 package transactions
 
-import "time"
+import (
+	"rango-backend/utils"
+	"time"
+)
 
 // ==============================================================================
 // 1. HTTP MODELS
@@ -23,6 +26,14 @@ type CreateIncomeRequest struct {
 	Description   string    `json:"description" biding:"min=0,max=400"`
 }
 
+type CreateIncomeResponse struct {
+	Data CreateIncomeResponseData `json:"data"`
+}
+
+type CreateIncomeResponseData struct {
+	Entry ViewEntry `json:"entry"`
+}
+
 // Request body to create an installment
 type CreateInstallmentRequest struct {
 	Name              string    `json:"name" binding:"required"`
@@ -37,6 +48,23 @@ type CreateInstallmentResponse struct {
 }
 
 type CreateInstallmentResponseData struct {
+	Entries []ViewEntry `json:"entries"`
+}
+
+type CreateSimpleExpenseResponse struct {
+	Data CreateSimpleExpenseResponseData `json:"data"`
+}
+
+type CreateSimpleExpenseResponseData struct {
+	Entry ViewEntry `json:"entry"`
+}
+
+type ListEntriesResponse struct {
+	Data  ListEntriesResponseData `json:"data"`
+	Query utils.QueryMeta         `json:"query"`
+}
+
+type ListEntriesResponseData struct {
 	Entries []ViewEntry `json:"entries"`
 }
 

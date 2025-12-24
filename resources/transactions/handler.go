@@ -18,6 +18,17 @@ func NewHandler(db *sql.DB) *API {
 	}
 }
 
+// @Summary Create a Simple Expense
+// @Description Create a Simple Expense transaction and entry
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body CreateSimpleExpenseRequest true "Simple Expense payload"
+// @Success 201 {object} CreateSimpleExpenseResponse "Simple Expense created"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/simple-expense [post]
 func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 	var body CreateSimpleExpenseRequest
 
@@ -43,7 +54,7 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 		return
 	}
 
-	entries, err := api.transactionsUseCase.ListViewEntries(utils.CreateFilter().And("transaction_id", "eq", id))
+	entries, err := api.transactionsUseCase.ListViewEntries(utils.QueryOpts().And("transaction_id", "eq", id))
 
 	if err != nil {
 		apiErr := err.(*utils.HTTPError)
@@ -51,9 +62,9 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"data": gin.H{
-			"entry": entries[0],
+	ctx.JSON(http.StatusCreated, CreateSimpleExpenseResponse{
+		Data: CreateSimpleExpenseResponseData{
+			Entry: entries[0],
 		},
 	})
 }
@@ -65,7 +76,7 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body CreateIncomeRequest true "Income payload"
-// @Success 201 "Income transaction created"
+// @Success 201 {object} CreateIncomeResponse "Income transaction created"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
 // @Failure 500 {object} utils.HTTPError "Internal server error"
 // @Router /transactions/income [post]
@@ -94,7 +105,7 @@ func (api *API) CreateIncome(ctx *gin.Context) {
 		return
 	}
 
-	entries, err := api.transactionsUseCase.ListViewEntries(utils.CreateFilter().And("transaction_id", "eq", id))
+	entries, err := api.transactionsUseCase.ListViewEntries(utils.QueryOpts().And("transaction_id", "eq", id))
 
 	if err != nil {
 		apiErr := err.(*utils.HTTPError)
@@ -102,22 +113,37 @@ func (api *API) CreateIncome(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"data": gin.H{
-			"entry": entries[0],
+	ctx.JSON(http.StatusCreated, CreateIncomeResponse{
+		Data: CreateIncomeResponseData{
+			Entry: entries[0],
 		},
 	})
 }
 
+// @Summary List entries
+// @Description List a detailed view of entries joined with transactions for a given period
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param period path string true "period in format YYYYMM"
+// @Param page query int false "Page number" default(1)
+// @Param per_page query int false "Items per page" default(10)
+// @Param order_by query string false "Sort field" example(name)
+// @Param order query string false "Sort order (asc/desc)" Enums(asc, desc) default(asc)
+// @Success 200 {object} ListEntriesResponse "List of entries"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/entries/{period} [get]
 func (api *API) ListViewEntries(ctx *gin.Context) {
 	userID := ctx.GetString("user_id")
 	period := ctx.Param("period")
 	page := ctx.GetInt("page")
 	perPage := ctx.GetInt("per_page")
-	filter := ctx.MustGet("filter").(*utils.FilterBuilder).And("user_id", "eq", userID).
+	queryOpts := ctx.MustGet("query_opts").(*utils.QueryOptsBuilder).And("user_id", "eq", userID).
 		And("period", "eq", period).OrderBy("reference_date", "desc")
 
-	entries, err := api.transactionsUseCase.ListViewEntries(filter)
+	entries, err := api.transactionsUseCase.ListViewEntries(queryOpts)
 
 	if err != nil {
 		apiErr := err.(*utils.HTTPError)
@@ -125,7 +151,7 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 		return
 	}
 
-	count, err := api.transactionsUseCase.CountViewEntries(utils.CreateFilter().
+	count, err := api.transactionsUseCase.CountViewEntries(utils.QueryOpts().
 		And("user_id", "eq", userID).
 		And("period", "eq", period))
 
@@ -143,16 +169,16 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 
 	totalPages := (count + perPage - 1) / perPage
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": gin.H{
-			"entries": entries,
+	ctx.JSON(http.StatusOK, ListEntriesResponse{
+		Data: ListEntriesResponseData{
+			Entries: entries,
 		},
-		"query": gin.H{
-			"page":        page,
-			"per_page":    perPage,
-			"next_page":   nextPage,
-			"total_pages": totalPages,
-			"total_items": count,
+		Query: utils.QueryMeta{
+			Page:       page,
+			PerPage:    perPage,
+			NextPage:   nextPage,
+			TotalPages: totalPages,
+			TotalItems: count,
 		},
 	})
 }

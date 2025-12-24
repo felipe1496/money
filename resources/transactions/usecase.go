@@ -8,8 +8,8 @@ import (
 
 type TransactionsUseCase interface {
 	CreateSimpleExpense(payload CreateSimpleExpenseDTO) (string, error)
-	ListViewEntries(filter *utils.FilterBuilder) ([]ViewEntry, error)
-	CountViewEntries(filter *utils.FilterBuilder) (int, error)
+	ListViewEntries(filter *utils.QueryOptsBuilder) ([]ViewEntry, error)
+	CountViewEntries(filter *utils.QueryOptsBuilder) (int, error)
 	DeleteTransactionById(id string) error
 	CreateIncome(payload CreateIncomeDTO) (string, error)
 	CreateInstallment(payload CreateInstallmentDTO) ([]ViewEntry, error)
@@ -73,7 +73,7 @@ func (uc *TransactionsUseCaseImpl) CreateSimpleExpense(payload CreateSimpleExpen
 	return transaction.ID, nil
 }
 
-func (uc *TransactionsUseCaseImpl) ListViewEntries(filter *utils.FilterBuilder) ([]ViewEntry, error) {
+func (uc *TransactionsUseCaseImpl) ListViewEntries(filter *utils.QueryOptsBuilder) ([]ViewEntry, error) {
 	entries, err := uc.repo.ListViewEntries(uc.db, filter)
 
 	if err != nil {
@@ -83,7 +83,7 @@ func (uc *TransactionsUseCaseImpl) ListViewEntries(filter *utils.FilterBuilder) 
 	return entries, nil
 }
 
-func (uc *TransactionsUseCaseImpl) CountViewEntries(filter *utils.FilterBuilder) (int, error) {
+func (uc *TransactionsUseCaseImpl) CountViewEntries(filter *utils.QueryOptsBuilder) (int, error) {
 	count, err := uc.repo.CountViewEntries(uc.db, filter)
 
 	if err != nil {
@@ -94,7 +94,7 @@ func (uc *TransactionsUseCaseImpl) CountViewEntries(filter *utils.FilterBuilder)
 }
 
 func (uc *TransactionsUseCaseImpl) DeleteTransactionById(id string) error {
-	transactionExists, err := uc.repo.ListTransactions(uc.db, utils.CreateFilter().And("id", "eq", id))
+	transactionExists, err := uc.repo.ListTransactions(uc.db, utils.QueryOpts().And("id", "eq", id))
 
 	if err != nil {
 		return AnErrorOccuredWhileFetchingTransactions
@@ -207,7 +207,7 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 		return []ViewEntry{}, err
 	}
 
-	entries, _ := uc.ListViewEntries(utils.CreateFilter().And("transaction_id", "eq", transaction.ID))
+	entries, _ := uc.ListViewEntries(utils.QueryOpts().And("transaction_id", "eq", transaction.ID))
 
 	return entries, nil
 }

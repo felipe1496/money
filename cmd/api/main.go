@@ -4,6 +4,7 @@ import (
 	"log"
 	docs "rango-backend/docs"
 	"rango-backend/resources/auth"
+	"rango-backend/resources/categories"
 	"rango-backend/resources/transactions"
 	"time"
 
@@ -40,6 +41,7 @@ func main() {
 
 	auth.Router(r)
 	transactions.Router(r)
+	categories.Router(r)
 
 	r.Run(":8080")
 }

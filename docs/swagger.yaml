@@ -16,6 +16,80 @@ definitions:
       user:
         $ref: '#/definitions/users.User'
     type: object
+  categories.Category:
+    properties:
+      color:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  categories.CategoryAmountPerPeriod:
+    properties:
+      amount:
+        type: integer
+      color:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      period:
+        type: string
+      user_id:
+        type: string
+    type: object
+  categories.CreateCategoryRequest:
+    properties:
+      color:
+        type: string
+      name:
+        type: string
+    required:
+    - color
+    - name
+    type: object
+  categories.CreateCategoryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/categories.CreateCategoryResponseData'
+    type: object
+  categories.CreateCategoryResponseData:
+    properties:
+      category:
+        $ref: '#/definitions/categories.Category'
+    type: object
+  categories.ListCategoriesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/categories.ListCategoriesResponseData'
+      query:
+        $ref: '#/definitions/utils.QueryMeta'
+    type: object
+  categories.ListCategoriesResponseData:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/categories.Category'
+        type: array
+    type: object
+  categories.ListCategoryAmountPerPeriodResponse:
+    properties:
+      data:
+        $ref: '#/definitions/categories.ListCategoryAmountPerPeriodResponseData'
+    type: object
+  categories.ListCategoryAmountPerPeriodResponseData:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/categories.CategoryAmountPerPeriod'
+        type: array
+    type: object
   transactions.CreateIncomeRequest:
     properties:
       amount:
@@ -32,6 +106,16 @@ definitions:
     - amount
     - name
     - reference_date
+    type: object
+  transactions.CreateIncomeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.CreateIncomeResponseData'
+    type: object
+  transactions.CreateIncomeResponseData:
+    properties:
+      entry:
+        $ref: '#/definitions/transactions.ViewEntry'
     type: object
   transactions.CreateInstallmentRequest:
     properties:
@@ -61,6 +145,47 @@ definitions:
         $ref: '#/definitions/transactions.CreateInstallmentResponseData'
     type: object
   transactions.CreateInstallmentResponseData:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/transactions.ViewEntry'
+        type: array
+    type: object
+  transactions.CreateSimpleExpenseRequest:
+    properties:
+      amount:
+        maximum: 999999
+        minimum: 0
+        type: number
+      description:
+        type: string
+      name:
+        type: string
+      reference_date:
+        type: string
+    required:
+    - amount
+    - name
+    - reference_date
+    type: object
+  transactions.CreateSimpleExpenseResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.CreateSimpleExpenseResponseData'
+    type: object
+  transactions.CreateSimpleExpenseResponseData:
+    properties:
+      entry:
+        $ref: '#/definitions/transactions.ViewEntry'
+    type: object
+  transactions.ListEntriesResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.ListEntriesResponseData'
+      query:
+        $ref: '#/definitions/utils.QueryMeta'
+    type: object
+  transactions.ListEntriesResponseData:
     properties:
       entries:
         items:
@@ -135,6 +260,19 @@ definitions:
       type:
         type: string
     type: object
+  utils.QueryMeta:
+    properties:
+      next_page:
+        type: boolean
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total_items:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
 info:
   contact: {}
   title: Money API
@@ -169,6 +307,150 @@ paths:
       summary: Login with Google
       tags:
       - auth
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: List categories
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - description: Sort field
+        example: name
+        in: query
+        name: sort
+        type: string
+      - default: asc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of categories
+          schema:
+            $ref: '#/definitions/categories.ListCategoriesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: List categories
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      description: Create a category
+      parameters:
+      - description: Category payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/categories.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Category created
+          schema:
+            $ref: '#/definitions/categories.CreateCategoryResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Create a category
+      tags:
+      - categories
+  /categories/{category_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a category
+      parameters:
+      - description: category ID
+        in: path
+        name: category_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Category deleted
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Delete Category By ID
+      tags:
+      - categories
+  /categories/{period}:
+    get:
+      consumes:
+      - application/json
+      description: List categories with amount per period
+      parameters:
+      - description: period
+        in: path
+        name: period
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of categories with amount per period
+          schema:
+            $ref: '#/definitions/categories.ListCategoryAmountPerPeriodResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: List categories with amount per period
+      tags:
+      - categories
   /transactions/{transaction_id}:
     delete:
       consumes:
@@ -202,6 +484,61 @@ paths:
       summary: Delete Transaction By ID
       tags:
       - transactions
+  /transactions/entries/{period}:
+    get:
+      consumes:
+      - application/json
+      description: List a detailed view of entries joined with transactions for a
+        given period
+      parameters:
+      - description: period in format YYYYMM
+        in: path
+        name: period
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - description: Sort field
+        example: name
+        in: query
+        name: order_by
+        type: string
+      - default: asc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of entries
+          schema:
+            $ref: '#/definitions/transactions.ListEntriesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: List entries
+      tags:
+      - transactions
   /transactions/income:
     post:
       consumes:
@@ -219,6 +556,8 @@ paths:
       responses:
         "201":
           description: Income transaction created
+          schema:
+            $ref: '#/definitions/transactions.CreateIncomeResponse'
         "401":
           description: Unauthorized
           schema:
@@ -262,6 +601,38 @@ paths:
       security:
       - BearerAuth: []
       summary: Create an installment
+      tags:
+      - transactions
+  /transactions/simple-expense:
+    post:
+      consumes:
+      - application/json
+      description: Create a Simple Expense transaction and entry
+      parameters:
+      - description: Simple Expense payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.CreateSimpleExpenseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Simple Expense created
+          schema:
+            $ref: '#/definitions/transactions.CreateSimpleExpenseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Create a Simple Expense
       tags:
       - transactions
 securityDefinitions:

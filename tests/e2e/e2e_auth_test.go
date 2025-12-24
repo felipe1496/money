@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"rango-backend/resources/auth"
@@ -86,7 +85,6 @@ func TestE2eAuth(t *testing.T) {
 		var response map[string]map[string]any
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
-		fmt.Println("response aqui: ", response)
 		assert.NotNil(t, response["data"])
 		assert.NotNil(t, response["data"]["user"])
 		assert.NotEmpty(t, response["data"]["access_token"])
