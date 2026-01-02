@@ -16,6 +16,7 @@ type CreateSimpleExpenseRequest struct {
 	Amount        float64   `json:"amount" binding:"required,gte=0,lte=999999"`
 	ReferenceDate time.Time `json:"reference_date" binding:"required"`
 	Description   string    `json:"description" biding:"min=0,max=400"`
+	CategoryID    *string   `json:"category_id"`
 }
 
 // Request body to create an income
@@ -24,6 +25,7 @@ type CreateIncomeRequest struct {
 	Amount        float64   `json:"amount" binding:"required,gte=0,lte=999999"`
 	ReferenceDate time.Time `json:"reference_date" binding:"required"`
 	Description   string    `json:"description" biding:"min=0,max=400"`
+	CategoryID    *string   `json:"category_id"`
 }
 
 type CreateIncomeResponse struct {
@@ -97,6 +99,7 @@ type CreateSimpleExpenseDTO struct {
 	Description   string
 	ReferenceDate time.Time
 	UserID        string
+	CategoryID    *string
 }
 
 type CreateIncomeDTO struct {
@@ -105,6 +108,7 @@ type CreateIncomeDTO struct {
 	ReferenceDate time.Time
 	Description   string
 	UserID        string
+	CategoryID    *string
 }
 
 type CreateInstallmentDTO struct {

@@ -1,1 +1,1 @@
-alter table transactions add column category_id text references categories(id);
+alter table transactions add column category_id text references categories(id) on delete set null;

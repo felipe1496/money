@@ -46,6 +46,7 @@ func (api *API) CreateSimpleExpense(ctx *gin.Context) {
 		ReferenceDate: body.ReferenceDate,
 		Description:   body.Description,
 		UserID:        ctx.GetString("user_id"),
+		CategoryID:    body.CategoryID,
 	})
 
 	if err != nil {
@@ -97,6 +98,7 @@ func (api *API) CreateIncome(ctx *gin.Context) {
 		ReferenceDate: body.ReferenceDate,
 		Description:   body.Description,
 		UserID:        ctx.GetString("user_id"),
+		CategoryID:    body.CategoryID,
 	})
 
 	if err != nil {

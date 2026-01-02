@@ -98,8 +98,6 @@ func (r *CategoriesRepoImpl) Count(db utils.Executer, filter *utils.QueryOptsBui
 		return 0, err
 	}
 
-	fmt.Println("countQuery:", sql)
-
 	var count int
 	err = db.QueryRow(sql, args...).Scan(&count)
 	fmt.Println(args)

@@ -46,6 +46,7 @@ func (uc *TransactionsUseCaseImpl) CreateSimpleExpense(payload CreateSimpleExpen
 		Type:        SimpleExpense,
 		Name:        payload.Name,
 		Description: &payload.Description,
+		CategoryID:  payload.CategoryID,
 	}, conn)
 
 	if err != nil {
@@ -132,6 +133,7 @@ func (uc *TransactionsUseCaseImpl) CreateIncome(payload CreateIncomeDTO) (string
 		Type:        Income,
 		Name:        payload.Name,
 		Description: &payload.Description,
+		CategoryID:  payload.CategoryID,
 	}, conn)
 
 	if err != nil {

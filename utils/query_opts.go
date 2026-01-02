@@ -144,7 +144,7 @@ func ForCount(qo *QueryOptsBuilder) *QueryOptsBuilder {
 	return &QueryOptsBuilder{
 		AndConditions: qo.AndConditions,
 		OrGroups:      qo.OrGroups,
-		Orders:        qo.Orders,
+		Orders:        nil,
 		LimitValue:    nil,
 		OffsetValue:   nil,
 	}

@@ -94,7 +94,7 @@ func (api *API) List(ctx *gin.Context) {
 		return
 	}
 
-	count, err := api.categoriesUseCase.Count(queryOpts)
+	count, err := api.categoriesUseCase.Count(utils.ForCount(queryOpts))
 	if err != nil {
 		apiErr := utils.NewHTTPError(http.StatusInternalServerError, err.Error())
 		ctx.JSON(apiErr.StatusCode, apiErr)
