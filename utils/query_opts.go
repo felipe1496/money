@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Masterminds/squirrel"
 )
 
@@ -130,7 +133,19 @@ func conditionToSquirrel(condition Condition) squirrel.Sqlizer {
 		return squirrel.Gt{condition.Field: condition.Value}
 	case "gte":
 		return squirrel.GtOrEq{condition.Field: condition.Value}
+	case "like":
+		return squirrel.Like{fmt.Sprintf("upper(%s)", condition.Field): strings.ToUpper(fmt.Sprintf("%%%s%%", condition.Value))}
 	default:
 		return nil
+	}
+}
+
+func ForCount(qo *QueryOptsBuilder) *QueryOptsBuilder {
+	return &QueryOptsBuilder{
+		AndConditions: qo.AndConditions,
+		OrGroups:      qo.OrGroups,
+		Orders:        qo.Orders,
+		LimitValue:    nil,
+		OffsetValue:   nil,
 	}
 }

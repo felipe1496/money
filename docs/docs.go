@@ -111,6 +111,12 @@ const docTemplate = `{
                         "description": "Sort order (asc/desc)",
                         "name": "order",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "A category name to filter by",
+                        "name": "name",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -234,6 +240,68 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Update Category By ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "category ID",
+                        "name": "category_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Category payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/categories.UpdateCategoryRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category updated",
+                        "schema": {
+                            "$ref": "#/definitions/categories.UpdateCategoryResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
             }
         },
         "/categories/{period}": {
@@ -261,6 +329,38 @@ const docTemplate = `{
                         "name": "period",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Items per page",
+                        "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "name",
+                        "description": "Sort field",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "type": "string",
+                        "default": "asc",
+                        "description": "Sort order (asc/desc)",
+                        "name": "order",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -623,9 +723,6 @@ const docTemplate = `{
         "categories.CategoryAmountPerPeriod": {
             "type": "object",
             "properties": {
-                "amount": {
-                    "type": "integer"
-                },
                 "color": {
                     "type": "string"
                 },
@@ -637,6 +734,9 @@ const docTemplate = `{
                 },
                 "period": {
                     "type": "string"
+                },
+                "total_amount": {
+                    "type": "number"
                 },
                 "user_id": {
                     "type": "string"
@@ -701,6 +801,9 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/categories.ListCategoryAmountPerPeriodResponseData"
+                },
+                "query": {
+                    "$ref": "#/definitions/utils.QueryMeta"
                 }
             }
         },
@@ -712,6 +815,33 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/categories.CategoryAmountPerPeriod"
                     }
+                }
+            }
+        },
+        "categories.UpdateCategoryRequest": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "categories.UpdateCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/categories.UpdateCategoryResponseData"
+                }
+            }
+        },
+        "categories.UpdateCategoryResponseData": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/categories.Category"
                 }
             }
         },
@@ -764,6 +894,9 @@ const docTemplate = `{
                 "total_installments"
             ],
             "properties": {
+                "category_id": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -884,6 +1017,15 @@ const docTemplate = `{
             "properties": {
                 "amount": {
                     "type": "number"
+                },
+                "category_color": {
+                    "type": "string"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "category_name": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"

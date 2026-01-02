@@ -14,6 +14,8 @@ type CategoriesRepo interface {
 	DeleteByID(db utils.Executer, id string) error
 	Count(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error)
 	ListCategoryAmountPerPeriod(db utils.Executer, filter *utils.QueryOptsBuilder) ([]CategoryAmountPerPeriod, error)
+	CountCategoryAmountPerPeriod(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error)
+	Update(db utils.Executer, id string, payload UpdateCategoryDTO) (Category, error)
 }
 
 type CategoriesRepoImpl struct {
@@ -161,4 +163,60 @@ func (r *CategoriesRepoImpl) ListCategoryAmountPerPeriod(db utils.Executer, filt
 	}
 
 	return result, nil
+}
+
+func (r *CategoriesRepoImpl) CountCategoryAmountPerPeriod(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error) {
+	countQuery := squirrel.
+		Select("COUNT(*)").
+		From("v_category_amount_per_period").
+		PlaceholderFormat(squirrel.Dollar)
+
+	countQuery = utils.QueryOptsToSquirrel(countQuery, filter)
+
+	sql, args, err := countQuery.ToSql()
+	if err != nil {
+		return 0, err
+	}
+
+	fmt.Println("count sql: ", sql, "args: ", args)
+
+	var count int
+	err = db.QueryRow(sql, args...).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r *CategoriesRepoImpl) Update(db utils.Executer, id string, payload UpdateCategoryDTO) (Category, error) {
+	query := squirrel.Update("categories").Suffix("RETURNING id, user_id, name, color, created_at")
+
+	if payload.Name != nil {
+		query = query.Set("name", payload.Name)
+	}
+
+	if payload.Color != nil {
+		query = query.Set("color", payload.Color)
+	}
+
+	sql, args, err := query.
+		Where(squirrel.Eq{"id": id}).
+		PlaceholderFormat(squirrel.Dollar).
+		ToSql()
+
+	if err != nil {
+		return Category{}, err
+	}
+
+	var category Category
+	err = db.QueryRow(sql, args...).Scan(
+		&category.ID,
+		&category.UserID,
+		&category.Name,
+		&category.Color,
+		&category.CreatedAt,
+	)
+
+	return category, err
 }

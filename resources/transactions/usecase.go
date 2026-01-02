@@ -138,6 +138,10 @@ func (uc *TransactionsUseCaseImpl) CreateIncome(payload CreateIncomeDTO) (string
 		return "", err
 	}
 
+	if payload.Amount < 0 {
+		payload.Amount = payload.Amount * -1
+	}
+
 	_, err = uc.repo.CreateEntry(CreateEntryDTO{
 		TransactionID: transaction.ID,
 		Amount:        payload.Amount,
@@ -179,6 +183,11 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 	if err != nil {
 		return []ViewEntry{}, utils.NewHTTPError(http.StatusInternalServerError, "An error occurred while trying to create the transaction")
 	}
+
+	if payload.TotalAmount > 0 {
+		payload.TotalAmount = payload.TotalAmount * -1
+	}
+
 	totalAmountCents := int(payload.TotalAmount * 100)
 
 	baseTotalAmount := totalAmountCents / payload.TotalInstallments

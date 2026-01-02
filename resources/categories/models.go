@@ -33,11 +33,25 @@ type ListCategoriesResponseData struct {
 }
 
 type ListCategoryAmountPerPeriodResponse struct {
-	Data ListCategoryAmountPerPeriodResponseData `json:"data"`
+	Data  ListCategoryAmountPerPeriodResponseData `json:"data"`
+	Query utils.QueryMeta                         `json:"query"`
 }
 
 type ListCategoryAmountPerPeriodResponseData struct {
 	Categories []CategoryAmountPerPeriod `json:"categories"`
+}
+
+type UpdateCategoryRequest struct {
+	Name  *string `json:"name" binding:"omitempty,min=1,max=50"`
+	Color *string `json:"color" binding:"omitempty,hexcolor,len=7"`
+}
+
+type UpdateCategoryResponse struct {
+	Data UpdateCategoryResponseData `json:"data"`
+}
+
+type UpdateCategoryResponseData struct {
+	Category Category `json:"category"`
 }
 
 // ==============================================================================
@@ -49,6 +63,11 @@ type CreateCategoryDTO struct {
 	UserID string `json:"user_id"`
 	Name   string `json:"name"`
 	Color  string `json:"color"`
+}
+
+type UpdateCategoryDTO struct {
+	Name  *string `json:"name"`
+	Color *string `json:"color"`
 }
 
 // ==============================================================================

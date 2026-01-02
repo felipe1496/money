@@ -12,6 +12,8 @@ type CategoriesUseCase interface {
 	DeleteByID(id string) error
 	Count(filter *utils.QueryOptsBuilder) (int, error)
 	ListCategoryAmountPerPeriod(filter *utils.QueryOptsBuilder) ([]CategoryAmountPerPeriod, error)
+	CountCategoryAmountPerPeriod(filter *utils.QueryOptsBuilder) (int, error)
+	Update(id string, payload UpdateCategoryDTO) (Category, error)
 }
 
 type CategoriesUseCaseImpl struct {
@@ -80,4 +82,34 @@ func (uc *CategoriesUseCaseImpl) ListCategoryAmountPerPeriod(filter *utils.Query
 		return nil, utils.NewHTTPError(http.StatusInternalServerError, "failed to list category amounts per period")
 	}
 	return amounts, nil
+}
+
+func (uc *CategoriesUseCaseImpl) CountCategoryAmountPerPeriod(filter *utils.QueryOptsBuilder) (int, error) {
+	count, err := uc.repo.CountCategoryAmountPerPeriod(uc.db, filter)
+
+	if err != nil {
+		return 0, utils.NewHTTPError(http.StatusInternalServerError, "failed to count category amounts per period")
+	}
+
+	return count, nil
+}
+
+func (uc *CategoriesUseCaseImpl) Update(id string, payload UpdateCategoryDTO) (Category, error) {
+	exists, err := uc.repo.Count(uc.db, utils.QueryOpts().And("id", "eq", id))
+
+	if err != nil {
+		return Category{}, utils.NewHTTPError(http.StatusInternalServerError, "failed to check if category exists")
+	}
+
+	if exists == 0 {
+		return Category{}, utils.NewHTTPError(http.StatusNotFound, "category not found")
+	}
+
+	category, err := uc.repo.Update(uc.db, id, payload)
+
+	if err != nil {
+		return Category{}, utils.NewHTTPError(http.StatusInternalServerError, "failed to update category")
+	}
+
+	return category, nil
 }

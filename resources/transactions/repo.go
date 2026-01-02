@@ -49,9 +49,9 @@ func (r *TransactionsRepoImpl) CreateEntry(payload CreateEntryDTO, db utils.Exec
 
 func (r *TransactionsRepoImpl) CreateTransaction(payload CreateTransactionDTO, db utils.Executer) (Transaction, error) {
 	query, args, err := squirrel.Insert("transactions").
-		Columns("id", "user_id", "category", "name", "description").
-		Values(ulid.Make().String(), payload.UserID, payload.Type, payload.Name, &payload.Description).
-		Suffix("RETURNING id, user_id, category, name, description, created_at").
+		Columns("id", "user_id", "category", "name", "description", "category_id").
+		Values(ulid.Make().String(), payload.UserID, payload.Type, payload.Name, &payload.Description, &payload.CategoryID).
+		Suffix("RETURNING id, user_id, category, name, description, created_at, category_id").
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
@@ -66,12 +66,13 @@ func (r *TransactionsRepoImpl) CreateTransaction(payload CreateTransactionDTO, d
 		&transaction.Name,
 		&transaction.Description,
 		&transaction.CreatedAt,
+		&transaction.CategoryID,
 	)
 	return transaction, err
 }
 
 func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) ([]ViewEntry, error) {
-	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments", "created_at", "reference_date").
+	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments", "created_at", "reference_date", "category_id", "category_name", "category_color").
 		From("v_entries").
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -108,6 +109,9 @@ func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.
 			&entry.TotalInstallments,
 			&entry.CreatedAt,
 			&entry.ReferenceDate,
+			&entry.CategoryID,
+			&entry.CategoryName,
+			&entry.CategoryColor,
 		); err != nil {
 			return nil, err
 		}

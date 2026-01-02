@@ -31,8 +31,6 @@ definitions:
     type: object
   categories.CategoryAmountPerPeriod:
     properties:
-      amount:
-        type: integer
       color:
         type: string
       id:
@@ -41,6 +39,8 @@ definitions:
         type: string
       period:
         type: string
+      total_amount:
+        type: number
       user_id:
         type: string
     type: object
@@ -82,6 +82,8 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/categories.ListCategoryAmountPerPeriodResponseData'
+      query:
+        $ref: '#/definitions/utils.QueryMeta'
     type: object
   categories.ListCategoryAmountPerPeriodResponseData:
     properties:
@@ -89,6 +91,23 @@ definitions:
         items:
           $ref: '#/definitions/categories.CategoryAmountPerPeriod'
         type: array
+    type: object
+  categories.UpdateCategoryRequest:
+    properties:
+      color:
+        type: string
+      name:
+        type: string
+    type: object
+  categories.UpdateCategoryResponse:
+    properties:
+      data:
+        $ref: '#/definitions/categories.UpdateCategoryResponseData'
+    type: object
+  categories.UpdateCategoryResponseData:
+    properties:
+      category:
+        $ref: '#/definitions/categories.Category'
     type: object
   transactions.CreateIncomeRequest:
     properties:
@@ -119,6 +138,8 @@ definitions:
     type: object
   transactions.CreateInstallmentRequest:
     properties:
+      category_id:
+        type: string
       description:
         type: string
       name:
@@ -206,6 +227,12 @@ definitions:
     properties:
       amount:
         type: number
+      category_color:
+        type: string
+      category_id:
+        type: string
+      category_name:
+        type: string
       created_at:
         type: string
       description:
@@ -336,6 +363,10 @@ paths:
         in: query
         name: order
         type: string
+      - description: A category name to filter by
+        in: query
+        name: name
+        type: string
       produces:
       - application/json
       responses:
@@ -420,6 +451,46 @@ paths:
       summary: Delete Category By ID
       tags:
       - categories
+    patch:
+      consumes:
+      - application/json
+      description: Update a category
+      parameters:
+      - description: category ID
+        in: path
+        name: category_id
+        required: true
+        type: string
+      - description: Category payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/categories.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Category updated
+          schema:
+            $ref: '#/definitions/categories.UpdateCategoryResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Update Category By ID
+      tags:
+      - categories
   /categories/{period}:
     get:
       consumes:
@@ -430,6 +501,29 @@ paths:
         in: path
         name: period
         required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: per_page
+        type: integer
+      - description: Sort field
+        example: name
+        in: query
+        name: sort
+        type: string
+      - default: asc
+        description: Sort order (asc/desc)
+        enum:
+        - asc
+        - desc
+        in: query
+        name: order
         type: string
       produces:
       - application/json

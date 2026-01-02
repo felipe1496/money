@@ -41,6 +41,7 @@ type CreateInstallmentRequest struct {
 	TotalInstallments int       `json:"total_installments" binding:"required,gte=1,lte=100"`
 	ReferenceDate     time.Time `json:"reference_date" binding:"required"`
 	Description       string    `json:"description" biding:"min=0,max=400"`
+	CategoryID        *string   `json:"category_id"`
 }
 
 type CreateInstallmentResponse struct {
@@ -79,6 +80,7 @@ type CreateTransactionDTO struct {
 	Type        TransactionType
 	Name        string
 	Description *string
+	CategoryID  *string
 }
 
 // Payload to create an entry in the database
@@ -112,6 +114,7 @@ type CreateInstallmentDTO struct {
 	ReferenceDate     time.Time
 	Description       string
 	UserID            string
+	CategoryID        *string
 }
 
 // ==============================================================================
@@ -134,6 +137,9 @@ type ViewEntry struct {
 	TotalInstallments int             `json:"total_installments"`
 	CreatedAt         time.Time       `json:"created_at"`
 	ReferenceDate     time.Time       `json:"reference_date"`
+	CategoryID        *string         `json:"category_id,omitempty"`
+	CategoryName      *string         `json:"category_name,omitempty"`
+	CategoryColor     *string         `json:"category_color,omitempty"`
 }
 
 // Entries table record
@@ -151,6 +157,7 @@ type Transaction struct {
 	UserID      string
 	Type        TransactionType
 	Name        string
-	Description string
+	Description *string
 	CreatedAt   time.Time
+	CategoryID  *string
 }

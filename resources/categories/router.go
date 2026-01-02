@@ -19,10 +19,10 @@ func Router(router *gin.Engine) {
 	handler := NewHandler(db)
 	group := router.Group("/api/v1/categories")
 	{
-		group.POST("/",
+		group.POST("",
 			middlewares.RequireAuthMiddleware(jwtService),
 			handler.Create)
-		group.GET("/", middlewares.RequireAuthMiddleware(jwtService),
+		group.GET("", middlewares.RequireAuthMiddleware(jwtService),
 			middlewares.QueryOptsMiddleware(),
 			handler.List)
 		group.DELETE("/:category_id",
@@ -32,5 +32,8 @@ func Router(router *gin.Engine) {
 			middlewares.RequireAuthMiddleware(jwtService),
 			middlewares.QueryOptsMiddleware(),
 			handler.ListCategoryAmountPerPeriod)
+		group.PATCH("/:category_id",
+			middlewares.RequireAuthMiddleware(jwtService),
+			handler.Update)
 	}
 }

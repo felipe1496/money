@@ -238,6 +238,7 @@ func (api *API) CreateInstallment(ctx *gin.Context) {
 		ReferenceDate:     body.ReferenceDate,
 		Description:       body.Description,
 		UserID:            ctx.GetString("user_id"),
+		CategoryID:        body.CategoryID,
 	})
 
 	ctx.JSON(http.StatusCreated, CreateInstallmentResponse{
