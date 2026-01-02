@@ -178,6 +178,7 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 		Type:        Installment,
 		Name:        payload.Name,
 		Description: &payload.Description,
+		CategoryID:  payload.CategoryID,
 	}, conn)
 
 	if err != nil {

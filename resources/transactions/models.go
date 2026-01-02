@@ -37,8 +37,8 @@ type CreateIncomeResponseData struct {
 // Request body to create an installment
 type CreateInstallmentRequest struct {
 	Name              string    `json:"name" binding:"required"`
-	TotalAmount       float64   `json:"total_amount" binding:"required,gte=0,lte=999999"`
-	TotalInstallments int       `json:"total_installments" binding:"required,gte=1,lte=100"`
+	TotalAmount       float64   `json:"total_amount" binding:"required,gt=0,lte=999999"`
+	TotalInstallments int       `json:"total_installments" binding:"required,gt=1,lte=100"`
 	ReferenceDate     time.Time `json:"reference_date" binding:"required"`
 	Description       string    `json:"description" biding:"min=0,max=400"`
 	CategoryID        *string   `json:"category_id"`
