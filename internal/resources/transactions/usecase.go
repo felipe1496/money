@@ -3,6 +3,7 @@ package transactions
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
 	"github.com/felipe1496/open-wallet/internal/utils"
 )
@@ -199,7 +200,8 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 	rest := totalAmountCents % payload.TotalInstallments
 
 	for i := 0; i < payload.TotalInstallments; i++ {
-		nextRefDate := payload.ReferenceDate.AddDate(0, i, 0)
+		refData, _ := time.Parse("2006-01-02", payload.ReferenceDate)
+		nextRefDate := refData.AddDate(0, i, 0)
 		amount := baseTotalAmount
 		if i == 0 {
 			amount += rest
@@ -207,7 +209,7 @@ func (uc *TransactionsUseCaseImpl) CreateInstallment(payload CreateInstallmentDT
 		entryDTO := CreateEntryDTO{
 			TransactionID: transaction.ID,
 			Amount:        float64(amount) / 100,
-			ReferenceDate: nextRefDate,
+			ReferenceDate: nextRefDate.Format("2006-01-02"),
 		}
 
 		_, err = uc.repo.CreateEntry(entryDTO, conn)

@@ -13,20 +13,20 @@ import (
 
 // Request body to create a simple expense
 type CreateSimpleExpenseRequest struct {
-	Name          string    `json:"name" binding:"required"`
-	Amount        float64   `json:"amount" binding:"required,gte=0,lte=999999"`
-	ReferenceDate time.Time `json:"reference_date" binding:"required"`
-	Description   string    `json:"description" biding:"min=0,max=400"`
-	CategoryID    *string   `json:"category_id"`
+	Name          string  `json:"name" binding:"required"`
+	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
+	Description   string  `json:"description" biding:"min=0,max=400"`
+	CategoryID    *string `json:"category_id"`
 }
 
 // Request body to create an income
 type CreateIncomeRequest struct {
-	Name          string    `json:"name" binding:"required"`
-	Amount        float64   `json:"amount" binding:"required,gte=0,lte=999999"`
-	ReferenceDate time.Time `json:"reference_date" binding:"required"`
-	Description   string    `json:"description" biding:"min=0,max=400"`
-	CategoryID    *string   `json:"category_id"`
+	Name          string  `json:"name" binding:"required"`
+	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
+	Description   string  `json:"description" biding:"min=0,max=400"`
+	CategoryID    *string `json:"category_id"`
 }
 
 type CreateIncomeResponse struct {
@@ -39,12 +39,12 @@ type CreateIncomeResponseData struct {
 
 // Request body to create an installment
 type CreateInstallmentRequest struct {
-	Name              string    `json:"name" binding:"required"`
-	TotalAmount       float64   `json:"total_amount" binding:"required,gt=0,lte=999999"`
-	TotalInstallments int       `json:"total_installments" binding:"required,gt=1,lte=100"`
-	ReferenceDate     time.Time `json:"reference_date" binding:"required"`
-	Description       string    `json:"description" biding:"min=0,max=400"`
-	CategoryID        *string   `json:"category_id"`
+	Name              string  `json:"name" binding:"required"`
+	TotalAmount       float64 `json:"total_amount" binding:"required,gt=0,lte=999999"`
+	TotalInstallments int     `json:"total_installments" binding:"required,gt=1,lte=100"`
+	ReferenceDate     string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
+	Description       string  `json:"description" biding:"min=0,max=400"`
+	CategoryID        *string `json:"category_id"`
 }
 
 type CreateInstallmentResponse struct {
@@ -81,11 +81,11 @@ type UpdateSimpleExpenseResponseData struct {
 }
 
 type UpdateSimpleExpenseRequest struct {
-	Name          *string    `json:"name"`
-	Description   *string    `json:"description"`
-	Amount        *float64   `json:"amount"`
-	ReferenceDate *time.Time `json:"reference_date"`
-	CategoryID    *string    `json:"category_id"`
+	Name          *string  `json:"name"`
+	Description   *string  `json:"description"`
+	Amount        *float64 `json:"amount"`
+	ReferenceDate *string  `json:"reference_date" binding:"datetime=2006-01-02"`
+	CategoryID    *string  `json:"category_id"`
 }
 
 // ==============================================================================
@@ -106,7 +106,7 @@ type CreateTransactionDTO struct {
 type CreateEntryDTO struct {
 	TransactionID string
 	Amount        float64
-	ReferenceDate time.Time
+	ReferenceDate string
 }
 
 // Payload to the use case create a simple expense
@@ -114,7 +114,7 @@ type CreateSimpleExpenseDTO struct {
 	Name          string
 	Amount        float64
 	Description   string
-	ReferenceDate time.Time
+	ReferenceDate string
 	UserID        string
 	CategoryID    *string
 }
@@ -122,7 +122,7 @@ type CreateSimpleExpenseDTO struct {
 type CreateIncomeDTO struct {
 	Name          string
 	Amount        float64
-	ReferenceDate time.Time
+	ReferenceDate string
 	Description   string
 	UserID        string
 	CategoryID    *string
@@ -132,7 +132,7 @@ type CreateInstallmentDTO struct {
 	Name              string
 	TotalAmount       float64
 	TotalInstallments int
-	ReferenceDate     time.Time
+	ReferenceDate     string
 	Description       string
 	UserID            string
 	CategoryID        *string
@@ -142,7 +142,7 @@ type UpdateSimpleExpenseDTO struct {
 	Name          *string
 	Description   *string
 	Amount        *float64
-	ReferenceDate *time.Time
+	ReferenceDate *string
 	CategoryID    *string
 }
 
@@ -154,7 +154,7 @@ type UpdateTransactionDTO struct {
 
 type UpdateEntryDTO struct {
 	Amount        *float64
-	ReferenceDate *time.Time
+	ReferenceDate *string
 }
 
 // ==============================================================================
@@ -176,7 +176,7 @@ type ViewEntry struct {
 	Installment       int             `json:"installment"`
 	TotalInstallments int             `json:"total_installments"`
 	CreatedAt         time.Time       `json:"created_at"`
-	ReferenceDate     time.Time       `json:"reference_date"`
+	ReferenceDate     string          `json:"reference_date"`
 	CategoryID        *string         `json:"category_id,omitempty"`
 	CategoryName      *string         `json:"category_name,omitempty"`
 	CategoryColor     *string         `json:"category_color,omitempty"`
@@ -187,7 +187,7 @@ type Entry struct {
 	ID            string
 	TransactionID string
 	Amount        float64
-	ReferenceDate time.Time
+	ReferenceDate string
 	CreatedAt     time.Time
 }
 

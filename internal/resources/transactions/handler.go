@@ -144,7 +144,7 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 	page := ctx.GetInt("page")
 	perPage := ctx.GetInt("per_page")
 	queryOpts := ctx.MustGet("query_opts").(*utils.QueryOptsBuilder).And("user_id", "eq", userID).
-		And("period", "eq", period).OrderBy("reference_date", "desc")
+		And("period", "eq", period)
 
 	entries, err := api.transactionsUseCase.ListViewEntries(queryOpts)
 

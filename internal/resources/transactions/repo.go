@@ -29,11 +29,10 @@ func NewTransactionsRepo(db utils.Executer) TransactionsRepo {
 }
 
 func (r *TransactionsRepoImpl) CreateEntry(payload CreateEntryDTO, db utils.Executer) (Entry, error) {
-
 	query, args, err := squirrel.Insert("entries").
 		Columns("id", "transaction_id", "amount", "reference_date").
 		Values(ulid.Make().String(), payload.TransactionID, payload.Amount, payload.ReferenceDate).
-		Suffix("RETURNING id, transaction_id, amount, reference_date, created_at").
+		Suffix("RETURNING id, transaction_id, amount, reference_date::text, created_at").
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
@@ -48,6 +47,7 @@ func (r *TransactionsRepoImpl) CreateEntry(payload CreateEntryDTO, db utils.Exec
 		&entry.ReferenceDate,
 		&entry.CreatedAt,
 	)
+
 	return entry, err
 }
 
@@ -76,14 +76,14 @@ func (r *TransactionsRepoImpl) CreateTransaction(payload CreateTransactionDTO, d
 }
 
 func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) ([]ViewEntry, error) {
-	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments", "created_at", "reference_date", "category_id", "category_name", "category_color").
+	query := squirrel.Select("id", "transaction_id", "name", "description", "amount", "period", "user_id", "category", "total_amount", "installment", "total_installments", "created_at", "reference_date::text", "category_id", "category_name", "category_color").
 		From("v_entries").
 		PlaceholderFormat(squirrel.Dollar)
 
 	query = utils.QueryOptsToSquirrel(query, filter)
 
 	sql, args, err := query.ToSql()
-	fmt.Println("sql: ", sql, args)
+
 	if err != nil {
 		return nil, err
 	}
