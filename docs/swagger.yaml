@@ -227,6 +227,29 @@ definitions:
     - SimpleExpense
     - Income
     - Installment
+  transactions.UpdateIncomeRequest:
+    properties:
+      amount:
+        type: number
+      category_id:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      reference_date:
+        type: string
+    type: object
+  transactions.UpdateIncomeResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.UpdateIncomeResponseData'
+    type: object
+  transactions.UpdateIncomeResponseData:
+    properties:
+      entry:
+        $ref: '#/definitions/transactions.ViewEntry'
+    type: object
   transactions.UpdateSimpleExpenseRequest:
     properties:
       amount:
@@ -690,6 +713,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Create an income
+      tags:
+      - transactions
+  /transactions/income/{transaction_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update a cinome
+      parameters:
+      - description: transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      - description: Income payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.UpdateIncomeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Income updated
+          schema:
+            $ref: '#/definitions/transactions.UpdateIncomeResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Update a income
       tags:
       - transactions
   /transactions/installment:

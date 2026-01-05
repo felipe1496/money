@@ -517,6 +517,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/transactions/income/{transaction_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a cinome",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Update a income",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "transaction ID",
+                        "name": "transaction_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Income payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateIncomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Income updated",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateIncomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/installment": {
             "post": {
                 "security": [
@@ -1081,6 +1145,42 @@ const docTemplate = `{
                 "Income",
                 "Installment"
             ]
+        },
+        "transactions.UpdateIncomeRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "reference_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "transactions.UpdateIncomeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.UpdateIncomeResponseData"
+                }
+            }
+        },
+        "transactions.UpdateIncomeResponseData": {
+            "type": "object",
+            "properties": {
+                "entry": {
+                    "$ref": "#/definitions/transactions.ViewEntry"
+                }
+            }
         },
         "transactions.UpdateSimpleExpenseRequest": {
             "type": "object",

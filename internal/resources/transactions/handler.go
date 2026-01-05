@@ -295,3 +295,48 @@ func (api *API) UpdateSimpleExpense(ctx *gin.Context) {
 		},
 	})
 }
+
+// @Summary Update a income
+// @Description Update a cinome
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param transaction_id path string true "transaction ID"
+// @Param body body UpdateIncomeRequest true "Income payload"
+// @Success 200 {object} UpdateIncomeResponse "Income updated"
+// @Failure 400 {object} utils.HTTPError "Bad request"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/income/{transaction_id} [patch]
+func (api *API) UpdateIncome(ctx *gin.Context) {
+	transactionID := ctx.Param("transaction_id")
+
+	var body UpdateIncomeRequest
+
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	entry, err := api.transactionsUseCase.UpdateIncome(transactionID, UpdateIncomeDTO{
+		Name:          body.Name,
+		Description:   body.Description,
+		Amount:        body.Amount,
+		ReferenceDate: body.ReferenceDate,
+		CategoryID:    body.CategoryID,
+	})
+
+	if err != nil {
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, UpdateIncomeResponse{
+		Data: UpdateIncomeResponseData{
+			Entry: entry,
+		},
+	})
+}

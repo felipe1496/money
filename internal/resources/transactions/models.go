@@ -80,7 +80,23 @@ type UpdateSimpleExpenseResponseData struct {
 	Entry ViewEntry `json:"entry"`
 }
 
+type UpdateIncomeResponse struct {
+	Data UpdateIncomeResponseData `json:"data"`
+}
+
+type UpdateIncomeResponseData struct {
+	Entry ViewEntry `json:"entry"`
+}
+
 type UpdateSimpleExpenseRequest struct {
+	Name          *string  `json:"name"`
+	Description   *string  `json:"description"`
+	Amount        *float64 `json:"amount"`
+	ReferenceDate *string  `json:"reference_date" binding:"datetime=2006-01-02"`
+	CategoryID    *string  `json:"category_id"`
+}
+
+type UpdateIncomeRequest struct {
 	Name          *string  `json:"name"`
 	Description   *string  `json:"description"`
 	Amount        *float64 `json:"amount"`
@@ -139,6 +155,14 @@ type CreateInstallmentDTO struct {
 }
 
 type UpdateSimpleExpenseDTO struct {
+	Name          *string
+	Description   *string
+	Amount        *float64
+	ReferenceDate *string
+	CategoryID    *string
+}
+
+type UpdateIncomeDTO struct {
 	Name          *string
 	Description   *string
 	Amount        *float64
