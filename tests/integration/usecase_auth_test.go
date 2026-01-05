@@ -2,13 +2,14 @@ package tests
 
 import (
 	"errors"
-	"rango-backend/resources/auth"
-	"rango-backend/resources/users"
-	mockUsers "rango-backend/resources/users/mocks"
-	"rango-backend/services"
-	"rango-backend/services/mocks"
-	mockServices "rango-backend/services/mocks"
 	"testing"
+
+	"github.com/felipe1496/open-wallet/internal/resources/auth"
+	"github.com/felipe1496/open-wallet/internal/resources/users"
+	mockUsers "github.com/felipe1496/open-wallet/internal/resources/users/mocks"
+	"github.com/felipe1496/open-wallet/internal/services"
+	"github.com/felipe1496/open-wallet/internal/services/mocks"
+	mockServices "github.com/felipe1496/open-wallet/internal/services/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

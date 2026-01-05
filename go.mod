@@ -1,4 +1,4 @@
-module rango-backend
+module github.com/felipe1496/open-wallet
 
 go 1.24.0
 

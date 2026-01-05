@@ -2,11 +2,13 @@ package main
 
 import (
 	"log"
-	docs "rango-backend/docs"
-	"rango-backend/resources/auth"
-	"rango-backend/resources/categories"
-	"rango-backend/resources/transactions"
 	"time"
+
+	docs "github.com/felipe1496/open-wallet/docs"
+
+	"github.com/felipe1496/open-wallet/internal/resources/auth"
+	"github.com/felipe1496/open-wallet/internal/resources/categories"
+	"github.com/felipe1496/open-wallet/internal/resources/transactions"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

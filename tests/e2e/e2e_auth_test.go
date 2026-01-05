@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"rango-backend/resources/auth"
-	"rango-backend/services"
-	"rango-backend/services/mocks"
 	"testing"
+
+	"github.com/felipe1496/open-wallet/internal/resources/auth"
+	"github.com/felipe1496/open-wallet/internal/services"
+	"github.com/felipe1496/open-wallet/internal/services/mocks"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/source/file"

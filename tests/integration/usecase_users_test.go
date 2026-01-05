@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"rango-backend/resources/users"
-	"rango-backend/resources/users/mocks"
+	"github.com/felipe1496/open-wallet/internal/resources/users"
+	"github.com/felipe1496/open-wallet/internal/resources/users/mocks"
 
 	"github.com/stretchr/testify/assert"
 )
