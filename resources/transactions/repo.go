@@ -1,6 +1,7 @@
 package transactions
 
 import (
+	"errors"
 	"fmt"
 	"rango-backend/utils"
 
@@ -15,6 +16,8 @@ type TransactionsRepo interface {
 	CountViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error)
 	DeleteTransactionById(db utils.Executer, id string) error
 	ListTransactions(db utils.Executer, filter *utils.QueryOptsBuilder) ([]Transaction, error)
+	UpdateTransaction(db utils.Executer, id string, payload UpdateTransactionDTO) (Transaction, error)
+	UpdateEntry(db utils.Executer, id string, payload UpdateEntryDTO) (Entry, error)
 }
 
 type TransactionsRepoImpl struct {
@@ -79,7 +82,7 @@ func (r *TransactionsRepoImpl) ListViewEntries(db utils.Executer, filter *utils.
 	query = utils.QueryOptsToSquirrel(query, filter)
 
 	sql, args, err := query.ToSql()
-
+	fmt.Println("sql: ", sql, args)
 	if err != nil {
 		return nil, err
 	}
@@ -198,4 +201,80 @@ func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils
 	}
 
 	return transactions, nil
+}
+
+func (r *TransactionsRepoImpl) UpdateTransaction(db utils.Executer, id string, payload UpdateTransactionDTO) (Transaction, error) {
+	if !utils.HasAtLeastOneField(payload) {
+		return Transaction{}, errors.New("no fields to update")
+	}
+
+	query := squirrel.Update("transactions").Where(squirrel.Eq{"id": id}).
+		Suffix("RETURNING id, user_id, category, name, description, created_at, category_id").
+		PlaceholderFormat(squirrel.Dollar)
+
+	if payload.Name != nil {
+		query = query.Set("name", payload.Name)
+	}
+
+	if payload.Description != nil {
+		query = query.Set("description", payload.Description)
+	}
+
+	if payload.CategoryID != nil {
+		query = query.Set("category_id", payload.CategoryID)
+	}
+
+	sql, args, err := query.ToSql()
+
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	var transaction Transaction
+	db.QueryRow(sql, args...).Scan(
+		&transaction.ID,
+		&transaction.UserID,
+		&transaction.Type,
+		&transaction.Name,
+		&transaction.Description,
+		&transaction.CreatedAt,
+		&transaction.CategoryID,
+	)
+
+	return transaction, nil
+}
+
+func (r *TransactionsRepoImpl) UpdateEntry(db utils.Executer, id string, payload UpdateEntryDTO) (Entry, error) {
+	if !utils.HasAtLeastOneField(payload) {
+		return Entry{}, errors.New("no fields to update")
+	}
+
+	query := squirrel.Update("entries").Where(squirrel.Eq{"id": id}).
+		Suffix("RETURNING id, transaction_id, amount, reference_date, created_at").
+		PlaceholderFormat(squirrel.Dollar)
+
+	if payload.Amount != nil {
+		query = query.Set("amount", payload.Amount)
+	}
+
+	if payload.ReferenceDate != nil {
+		query = query.Set("reference_date", payload.ReferenceDate)
+	}
+
+	sql, args, err := query.ToSql()
+
+	if err != nil {
+		return Entry{}, err
+	}
+
+	var entry Entry
+	db.QueryRow(sql, args...).Scan(
+		&entry.ID,
+		&entry.TransactionID,
+		&entry.Amount,
+		&entry.ReferenceDate,
+		&entry.CreatedAt,
+	)
+
+	return entry, nil
 }

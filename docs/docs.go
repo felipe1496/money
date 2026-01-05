@@ -619,6 +619,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/transactions/simple-expense/{transaction_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a simple expense",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Update a simple expense",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "transaction ID",
+                        "name": "transaction_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Simple expense payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateSimpleExpenseRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Simple expense updated",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateSimpleExpenseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/{transaction_id}": {
             "delete": {
                 "security": [
@@ -825,7 +889,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
                 }
             }
         },
@@ -857,6 +923,9 @@ const docTemplate = `{
                     "type": "number",
                     "maximum": 999999,
                     "minimum": 0
+                },
+                "category_id": {
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -908,13 +977,11 @@ const docTemplate = `{
                 },
                 "total_amount": {
                     "type": "number",
-                    "maximum": 999999,
-                    "minimum": 0
+                    "maximum": 999999
                 },
                 "total_installments": {
                     "type": "integer",
-                    "maximum": 100,
-                    "minimum": 1
+                    "maximum": 100
                 }
             }
         },
@@ -949,6 +1016,9 @@ const docTemplate = `{
                     "type": "number",
                     "maximum": 999999,
                     "minimum": 0
+                },
+                "category_id": {
+                    "type": "string"
                 },
                 "description": {
                     "type": "string"
@@ -1011,6 +1081,42 @@ const docTemplate = `{
                 "Income",
                 "Installment"
             ]
+        },
+        "transactions.UpdateSimpleExpenseRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "reference_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "transactions.UpdateSimpleExpenseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.UpdateSimpleExpenseResponseData"
+                }
+            }
+        },
+        "transactions.UpdateSimpleExpenseResponseData": {
+            "type": "object",
+            "properties": {
+                "entry": {
+                    "$ref": "#/definitions/transactions.ViewEntry"
+                }
+            }
         },
         "transactions.ViewEntry": {
             "type": "object",

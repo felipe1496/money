@@ -35,5 +35,8 @@ func Router(router *gin.Engine) {
 		transactionsGroup.POST("/installment",
 			middlewares.RequireAuthMiddleware(jwtService),
 			handler.CreateInstallment)
+		transactionsGroup.PATCH("/simple-expense/:transaction_id",
+			middlewares.RequireAuthMiddleware(jwtService),
+			handler.UpdateSimpleExpense)
 	}
 }

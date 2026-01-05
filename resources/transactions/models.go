@@ -71,6 +71,22 @@ type ListEntriesResponseData struct {
 	Entries []ViewEntry `json:"entries"`
 }
 
+type UpdateSimpleExpenseResponse struct {
+	Data UpdateSimpleExpenseResponseData `json:"data"`
+}
+
+type UpdateSimpleExpenseResponseData struct {
+	Entry ViewEntry `json:"entry"`
+}
+
+type UpdateSimpleExpenseRequest struct {
+	Name          *string    `json:"name"`
+	Description   *string    `json:"description"`
+	Amount        *float64   `json:"amount"`
+	ReferenceDate *time.Time `json:"reference_date"`
+	CategoryID    *string    `json:"category_id"`
+}
+
 // ==============================================================================
 // 2. DTO MODELS
 //    Models that represents data transfer objects between api layers
@@ -119,6 +135,25 @@ type CreateInstallmentDTO struct {
 	Description       string
 	UserID            string
 	CategoryID        *string
+}
+
+type UpdateSimpleExpenseDTO struct {
+	Name          *string
+	Description   *string
+	Amount        *float64
+	ReferenceDate *time.Time
+	CategoryID    *string
+}
+
+type UpdateTransactionDTO struct {
+	Name        *string
+	Description *string
+	CategoryID  *string
+}
+
+type UpdateEntryDTO struct {
+	Amount        *float64
+	ReferenceDate *time.Time
 }
 
 // ==============================================================================

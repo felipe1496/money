@@ -97,6 +97,8 @@ definitions:
       color:
         type: string
       name:
+        maxLength: 50
+        minLength: 1
         type: string
     type: object
   categories.UpdateCategoryResponse:
@@ -115,6 +117,8 @@ definitions:
         maximum: 999999
         minimum: 0
         type: number
+      category_id:
+        type: string
       description:
         type: string
       name:
@@ -148,11 +152,9 @@ definitions:
         type: string
       total_amount:
         maximum: 999999
-        minimum: 0
         type: number
       total_installments:
         maximum: 100
-        minimum: 1
         type: integer
     required:
     - name
@@ -178,6 +180,8 @@ definitions:
         maximum: 999999
         minimum: 0
         type: number
+      category_id:
+        type: string
       description:
         type: string
       name:
@@ -223,6 +227,29 @@ definitions:
     - SimpleExpense
     - Income
     - Installment
+  transactions.UpdateSimpleExpenseRequest:
+    properties:
+      amount:
+        type: number
+      category_id:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      reference_date:
+        type: string
+    type: object
+  transactions.UpdateSimpleExpenseResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.UpdateSimpleExpenseResponseData'
+    type: object
+  transactions.UpdateSimpleExpenseResponseData:
+    properties:
+      entry:
+        $ref: '#/definitions/transactions.ViewEntry'
+    type: object
   transactions.ViewEntry:
     properties:
       amount:
@@ -727,6 +754,47 @@ paths:
       security:
       - BearerAuth: []
       summary: Create a Simple Expense
+      tags:
+      - transactions
+  /transactions/simple-expense/{transaction_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update a simple expense
+      parameters:
+      - description: transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      - description: Simple expense payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.UpdateSimpleExpenseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Simple expense updated
+          schema:
+            $ref: '#/definitions/transactions.UpdateSimpleExpenseResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Update a simple expense
       tags:
       - transactions
 securityDefinitions:

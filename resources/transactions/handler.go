@@ -249,3 +249,48 @@ func (api *API) CreateInstallment(ctx *gin.Context) {
 		},
 	})
 }
+
+// @Summary Update a simple expense
+// @Description Update a simple expense
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param transaction_id path string true "transaction ID"
+// @Param body body UpdateSimpleExpenseRequest true "Simple expense payload"
+// @Success 200 {object} UpdateSimpleExpenseResponse "Simple expense updated"
+// @Failure 400 {object} utils.HTTPError "Bad request"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/simple-expense/{transaction_id} [patch]
+func (api *API) UpdateSimpleExpense(ctx *gin.Context) {
+	transactionID := ctx.Param("transaction_id")
+
+	var body UpdateSimpleExpenseRequest
+
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	entry, err := api.transactionsUseCase.UpdateSimpleExpense(transactionID, UpdateSimpleExpenseDTO{
+		Name:          body.Name,
+		Description:   body.Description,
+		Amount:        body.Amount,
+		ReferenceDate: body.ReferenceDate,
+		CategoryID:    body.CategoryID,
+	})
+
+	if err != nil {
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, UpdateSimpleExpenseResponse{
+		Data: UpdateSimpleExpenseResponseData{
+			Entry: entry,
+		},
+	})
+}
