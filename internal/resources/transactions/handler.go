@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/felipe1496/open-wallet/internal/resources/constants"
 	"github.com/felipe1496/open-wallet/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -337,6 +338,69 @@ func (api *API) UpdateIncome(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, UpdateIncomeResponse{
 		Data: UpdateIncomeResponseData{
 			Entry: entry,
+		},
+	})
+}
+
+// @Summary Update a income
+// @Description Update a cinome
+// @Tags transactions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param transaction_id path string true "transaction ID"
+// @Param entry_id path string true "entry ID"
+// @Param body body UpdateInstallmentRequest true "Installment payload"
+// @Param scope query string false "Scope" Enums(following, all)"
+// @Success 200 {object} UpdateInstallmentResponse "Installment updated"
+// @Failure 400 {object} utils.HTTPError "Bad request"
+// @Failure 401 {object} utils.HTTPError "Unauthorized"
+// @Failure 500 {object} utils.HTTPError "Internal server error"
+// @Router /transactions/installment/{transaction_id}/entry/{entry_id} [patch]
+func (api *API) UpdateInstallment(ctx *gin.Context) {
+	transactionID := ctx.Param("transaction_id")
+	entryID := ctx.Param("entry_id")
+	scopeStr := ctx.DefaultQuery("scope", constants.ThisOne)
+
+	validScopes := map[string]bool{
+		constants.ThisOne:          true,
+		constants.ThisAndFollowing: true,
+		constants.All:              true,
+	}
+
+	if !validScopes[scopeStr] {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, "invalid scope")
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	scope := constants.InstanceType(scopeStr)
+
+	var body UpdateInstallmentRequest
+
+	if err := ctx.ShouldBindJSON(&body); err != nil {
+		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	entries, err := api.transactionsUseCase.UpdateInstallment(transactionID, entryID, scope, UpdateInstallmentDTO{
+		Name:        body.Name,
+		Description: body.Description,
+		Amount:      body.Amount,
+		CategoryID:  body.CategoryID,
+		UserID:      ctx.GetString("user_id"),
+	})
+
+	if err != nil {
+		apiErr := err.(*utils.HTTPError)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, UpdateInstallmentResponse{
+		Data: UpdateInstallmentResponseData{
+			Entries: entries,
 		},
 	})
 }

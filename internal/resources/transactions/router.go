@@ -43,5 +43,8 @@ func Router(router *gin.Engine) {
 		transactionsGroup.PATCH("/income/:transaction_id",
 			middlewares.RequireAuthMiddleware(jwtService),
 			handler.UpdateIncome)
+		transactionsGroup.PATCH("/installment/:transaction_id/entry/:entry_id",
+			middlewares.RequireAuthMiddleware(jwtService),
+			handler.UpdateInstallment)
 	}
 }

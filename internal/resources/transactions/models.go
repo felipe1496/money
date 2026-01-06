@@ -3,6 +3,7 @@ package transactions
 import (
 	"time"
 
+	"github.com/felipe1496/open-wallet/internal/resources/constants"
 	"github.com/felipe1496/open-wallet/internal/utils"
 )
 
@@ -16,7 +17,7 @@ type CreateSimpleExpenseRequest struct {
 	Name          string  `json:"name" binding:"required"`
 	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
 	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
-	Description   string  `json:"description" biding:"min=0,max=400"`
+	Description   string  `json:"description" binding:"min=0,max=400"`
 	CategoryID    *string `json:"category_id"`
 }
 
@@ -25,7 +26,7 @@ type CreateIncomeRequest struct {
 	Name          string  `json:"name" binding:"required"`
 	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
 	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
-	Description   string  `json:"description" biding:"min=0,max=400"`
+	Description   string  `json:"description" binding:"min=0,max=400"`
 	CategoryID    *string `json:"category_id"`
 }
 
@@ -43,8 +44,23 @@ type CreateInstallmentRequest struct {
 	TotalAmount       float64 `json:"total_amount" binding:"required,gt=0,lte=999999"`
 	TotalInstallments int     `json:"total_installments" binding:"required,gt=1,lte=100"`
 	ReferenceDate     string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
-	Description       string  `json:"description" biding:"min=0,max=400"`
+	Description       string  `json:"description" binding:"min=0,max=400"`
 	CategoryID        *string `json:"category_id"`
+}
+
+type UpdateInstallmentRequest struct {
+	Name        *string  `json:"name" binding:"omitempty"`
+	Amount      *float64 `json:"amount" binding:"omitempty,gt=0,lte=999999"`
+	Description *string  `json:"description" binding:"omitempty,min=0,max=400"`
+	CategoryID  *string  `json:"category_id" binding:"omitempty"`
+}
+
+type UpdateInstallmentResponse struct {
+	Data UpdateInstallmentResponseData `json:"data"`
+}
+
+type UpdateInstallmentResponseData struct {
+	Entries []ViewEntry `json:"entries"`
 }
 
 type CreateInstallmentResponse struct {
@@ -112,7 +128,7 @@ type UpdateIncomeRequest struct {
 // Payload to create a transaction in the database
 type CreateTransactionDTO struct {
 	UserID      string
-	Type        TransactionType
+	Type        constants.TransactionType
 	Name        string
 	Description *string
 	CategoryID  *string
@@ -154,6 +170,14 @@ type CreateInstallmentDTO struct {
 	CategoryID        *string
 }
 
+type UpdateInstallmentDTO struct {
+	Name        *string
+	Amount      *float64
+	Description *string
+	UserID      string
+	CategoryID  *string
+}
+
 type UpdateSimpleExpenseDTO struct {
 	Name          *string
 	Description   *string
@@ -188,22 +212,22 @@ type UpdateEntryDTO struct {
 
 // View that mixes the entries with the transaction information, riched with some valuable information about the totality of this relationship
 type ViewEntry struct {
-	ID                string          `json:"id"`
-	TransactionID     string          `json:"transaction_id"`
-	Name              string          `json:"name"`
-	Description       *string         `json:"description"`
-	Amount            float64         `json:"amount"`
-	Period            string          `json:"period"`
-	UserID            string          `json:"user_id"`
-	Type              TransactionType `json:"type"`
-	TotalAmount       float64         `json:"total_amount"`
-	Installment       int             `json:"installment"`
-	TotalInstallments int             `json:"total_installments"`
-	CreatedAt         time.Time       `json:"created_at"`
-	ReferenceDate     string          `json:"reference_date"`
-	CategoryID        *string         `json:"category_id,omitempty"`
-	CategoryName      *string         `json:"category_name,omitempty"`
-	CategoryColor     *string         `json:"category_color,omitempty"`
+	ID                string                    `json:"id"`
+	TransactionID     string                    `json:"transaction_id"`
+	Name              string                    `json:"name"`
+	Description       *string                   `json:"description"`
+	Amount            float64                   `json:"amount"`
+	Period            string                    `json:"period"`
+	UserID            string                    `json:"user_id"`
+	Type              constants.TransactionType `json:"type"`
+	TotalAmount       float64                   `json:"total_amount"`
+	Installment       int                       `json:"installment"`
+	TotalInstallments int                       `json:"total_installments"`
+	CreatedAt         time.Time                 `json:"created_at"`
+	ReferenceDate     string                    `json:"reference_date"`
+	CategoryID        *string                   `json:"category_id,omitempty"`
+	CategoryName      *string                   `json:"category_name,omitempty"`
+	CategoryColor     *string                   `json:"category_color,omitempty"`
 }
 
 // Entries table record
@@ -219,7 +243,7 @@ type Entry struct {
 type Transaction struct {
 	ID          string
 	UserID      string
-	Type        TransactionType
+	Type        constants.TransactionType
 	Name        string
 	Description *string
 	CreatedAt   time.Time

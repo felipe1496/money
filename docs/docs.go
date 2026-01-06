@@ -632,6 +632,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/transactions/installment/{transaction_id}/entry/{entry_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a cinome",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Update a income",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "transaction ID",
+                        "name": "transaction_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "entry ID",
+                        "name": "entry_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Installment payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateInstallmentRequest"
+                        }
+                    },
+                    {
+                        "enum": [
+                            "following",
+                            "all"
+                        ],
+                        "type": "string",
+                        "description": "Scope",
+                        "name": "scope",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installment updated",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateInstallmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
         "/transactions/simple-expense": {
             "post": {
                 "security": [
@@ -975,6 +1056,19 @@ const docTemplate = `{
                 }
             }
         },
+        "constants.TransactionType": {
+            "type": "string",
+            "enum": [
+                "simple_expense",
+                "income",
+                "installment"
+            ],
+            "x-enum-varnames": [
+                "SimpleExpense",
+                "Income",
+                "Installment"
+            ]
+        },
         "transactions.CreateIncomeRequest": {
             "type": "object",
             "required": [
@@ -992,7 +1086,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 400,
+                    "minLength": 0
                 },
                 "name": {
                     "type": "string"
@@ -1031,7 +1127,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 400,
+                    "minLength": 0
                 },
                 "name": {
                     "type": "string"
@@ -1085,7 +1183,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 400,
+                    "minLength": 0
                 },
                 "name": {
                     "type": "string"
@@ -1133,19 +1233,6 @@ const docTemplate = `{
                 }
             }
         },
-        "transactions.TransactionType": {
-            "type": "string",
-            "enum": [
-                "simple_expense",
-                "income",
-                "installment"
-            ],
-            "x-enum-varnames": [
-                "SimpleExpense",
-                "Income",
-                "Installment"
-            ]
-        },
         "transactions.UpdateIncomeRequest": {
             "type": "object",
             "properties": {
@@ -1179,6 +1266,45 @@ const docTemplate = `{
             "properties": {
                 "entry": {
                     "$ref": "#/definitions/transactions.ViewEntry"
+                }
+            }
+        },
+        "transactions.UpdateInstallmentRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "maximum": 999999
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "maxLength": 400,
+                    "minLength": 0
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "transactions.UpdateInstallmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.UpdateInstallmentResponseData"
+                }
+            }
+        },
+        "transactions.UpdateInstallmentResponseData": {
+            "type": "object",
+            "properties": {
+                "entries": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/transactions.ViewEntry"
+                    }
                 }
             }
         },
@@ -1264,7 +1390,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "$ref": "#/definitions/transactions.TransactionType"
+                    "$ref": "#/definitions/constants.TransactionType"
                 },
                 "user_id": {
                     "type": "string"

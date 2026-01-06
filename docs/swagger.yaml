@@ -111,6 +111,16 @@ definitions:
       category:
         $ref: '#/definitions/categories.Category'
     type: object
+  constants.TransactionType:
+    enum:
+    - simple_expense
+    - income
+    - installment
+    type: string
+    x-enum-varnames:
+    - SimpleExpense
+    - Income
+    - Installment
   transactions.CreateIncomeRequest:
     properties:
       amount:
@@ -120,6 +130,8 @@ definitions:
       category_id:
         type: string
       description:
+        maxLength: 400
+        minLength: 0
         type: string
       name:
         type: string
@@ -145,6 +157,8 @@ definitions:
       category_id:
         type: string
       description:
+        maxLength: 400
+        minLength: 0
         type: string
       name:
         type: string
@@ -183,6 +197,8 @@ definitions:
       category_id:
         type: string
       description:
+        maxLength: 400
+        minLength: 0
         type: string
       name:
         type: string
@@ -217,16 +233,6 @@ definitions:
           $ref: '#/definitions/transactions.ViewEntry'
         type: array
     type: object
-  transactions.TransactionType:
-    enum:
-    - simple_expense
-    - income
-    - installment
-    type: string
-    x-enum-varnames:
-    - SimpleExpense
-    - Income
-    - Installment
   transactions.UpdateIncomeRequest:
     properties:
       amount:
@@ -249,6 +255,32 @@ definitions:
     properties:
       entry:
         $ref: '#/definitions/transactions.ViewEntry'
+    type: object
+  transactions.UpdateInstallmentRequest:
+    properties:
+      amount:
+        maximum: 999999
+        type: number
+      category_id:
+        type: string
+      description:
+        maxLength: 400
+        minLength: 0
+        type: string
+      name:
+        type: string
+    type: object
+  transactions.UpdateInstallmentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.UpdateInstallmentResponseData'
+    type: object
+  transactions.UpdateInstallmentResponseData:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/transactions.ViewEntry'
+        type: array
     type: object
   transactions.UpdateSimpleExpenseRequest:
     properties:
@@ -304,7 +336,7 @@ definitions:
       transaction_id:
         type: string
       type:
-        $ref: '#/definitions/transactions.TransactionType'
+        $ref: '#/definitions/constants.TransactionType'
       user_id:
         type: string
     type: object
@@ -786,6 +818,59 @@ paths:
       security:
       - BearerAuth: []
       summary: Create an installment
+      tags:
+      - transactions
+  /transactions/installment/{transaction_id}/entry/{entry_id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update a cinome
+      parameters:
+      - description: transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      - description: entry ID
+        in: path
+        name: entry_id
+        required: true
+        type: string
+      - description: Installment payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.UpdateInstallmentRequest'
+      - description: Scope
+        enum:
+        - following
+        - all
+        in: query
+        name: scope
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Installment updated
+          schema:
+            $ref: '#/definitions/transactions.UpdateInstallmentResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Update a income
       tags:
       - transactions
   /transactions/simple-expense:
