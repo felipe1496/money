@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/felipe1496/open-wallet/internal/resources/constants"
+	"github.com/felipe1496/open-wallet/internal/constants"
 	"github.com/felipe1496/open-wallet/internal/utils"
 )
 

@@ -2,7 +2,6 @@ package transactions
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/felipe1496/open-wallet/internal/utils"
 
@@ -143,7 +142,7 @@ func (r *TransactionsRepoImpl) CountViewEntries(db utils.Executer, filter *utils
 
 	var count int
 	err = db.QueryRow(sql, args...).Scan(&count)
-	fmt.Println(args)
+
 	if err != nil {
 		return 0, err
 	}
@@ -173,7 +172,7 @@ func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils
 	query = utils.QueryOptsToSquirrel(query, filter)
 
 	sql, args, err := query.ToSql()
-	fmt.Println(sql, args)
+
 	if err != nil {
 		return nil, err
 	}

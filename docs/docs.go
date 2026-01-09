@@ -114,6 +114,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "description": "Category filter",
+                        "name": "filter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "A category name to filter by",
                         "name": "name",
                         "in": "query"
@@ -342,6 +348,12 @@ const docTemplate = `{
                         "default": 10,
                         "description": "Items per page",
                         "name": "per_page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Category filter",
+                        "name": "filter",
                         "in": "query"
                     },
                     {

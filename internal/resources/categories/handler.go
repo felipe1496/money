@@ -2,7 +2,6 @@ package categories
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 
 	"github.com/felipe1496/open-wallet/internal/utils"
@@ -72,6 +71,7 @@ func (api *API) Create(ctx *gin.Context) {
 // @Param per_page query int false "Items per page" default(10)
 // @Param sort query string false "Sort field" example(name)
 // @Param order query string false "Sort order (asc/desc)" Enums(asc, desc) default(asc)
+// @Param filter query string false "Category filter"
 // @Param name query string false "A category name to filter by"
 // @Success 200 {object} ListCategoriesResponse "List of categories"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
@@ -83,7 +83,6 @@ func (api *API) List(ctx *gin.Context) {
 	nameFilter := ctx.Query("name")
 
 	if nameFilter != "" {
-		fmt.Println("nameFilter: ", nameFilter)
 		queryOpts.And("name", "like", nameFilter)
 	}
 
@@ -160,6 +159,7 @@ func (api *API) DeleteByID(ctx *gin.Context) {
 // @Param period path string true "period"
 // @Param page query int false "Page number" default(1)
 // @Param per_page query int false "Items per page" default(10)
+// @Param filter query string false "Category filter"
 // @Param sort query string false "Sort field" example(name)
 // @Param order query string false "Sort order (asc/desc)" Enums(asc, desc) default(asc)
 // @Success 200 {object} ListCategoryAmountPerPeriodResponse "List of categories with amount per period"

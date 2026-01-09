@@ -1,6 +1,10 @@
 package utils
 
-import "reflect"
+import (
+	"errors"
+	"net/http"
+	"reflect"
+)
 
 func HasAtLeastOneField(v interface{}) bool {
 	val := reflect.ValueOf(v)
@@ -26,4 +30,15 @@ func HasAtLeastOneField(v interface{}) bool {
 	}
 
 	return false
+}
+
+func GetApiErr(err error) *HTTPError {
+	var apiErr *HTTPError
+
+	if errors.As(err, &apiErr) {
+		return apiErr
+	} else {
+		return NewHTTPError(http.StatusInternalServerError, "an unexpected error occurred")
+	}
+
 }

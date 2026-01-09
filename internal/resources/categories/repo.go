@@ -1,8 +1,6 @@
 package categories
 
 import (
-	"fmt"
-
 	"github.com/felipe1496/open-wallet/internal/utils"
 
 	"github.com/Masterminds/squirrel"
@@ -101,7 +99,7 @@ func (r *CategoriesRepoImpl) Count(db utils.Executer, filter *utils.QueryOptsBui
 
 	var count int
 	err = db.QueryRow(sql, args...).Scan(&count)
-	fmt.Println(args)
+
 	if err != nil {
 		return 0, err
 	}
@@ -176,8 +174,6 @@ func (r *CategoriesRepoImpl) CountCategoryAmountPerPeriod(db utils.Executer, fil
 	if err != nil {
 		return 0, err
 	}
-
-	fmt.Println("count sql: ", sql, "args: ", args)
 
 	var count int
 	err = db.QueryRow(sql, args...).Scan(&count)

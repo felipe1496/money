@@ -93,11 +93,12 @@ func QueryOptsToSquirrel(query squirrel.SelectBuilder, qo *QueryOptsBuilder) squ
 	}
 
 	for _, orGroup := range qo.OrGroups {
-		orSqlizers := make([]squirrel.Sqlizer, 0)
+		orSqlizers := squirrel.Or{}
 		for _, condition := range orGroup {
 			orSqlizers = append(orSqlizers, conditionToSquirrel(condition))
 		}
-		query = query.Where(squirrel.Or(orSqlizers))
+
+		query = query.Where(orSqlizers)
 	}
 
 	if qo.LimitValue != nil {
