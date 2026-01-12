@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	docs "github.com/felipe1496/open-wallet/docs"
@@ -45,5 +47,10 @@ func main() {
 	transactions.Router(r)
 	categories.Router(r)
 
-	r.Run(":8080")
+	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
+	if port == "" {
+		port = ":8080"
+	}
+
+	r.Run(port)
 }
