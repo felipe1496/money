@@ -74,5 +74,5 @@ jobs:
             --set-env-vars GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
             --set-env-vars JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-            --set-env-vars ORIGINS="${{ vars.ORIGINS }}"
+            --set-env-vars ORIGINS="${{ vars.ORIGINS }}" \
             --set-env-vars LOGIN_REDIRECT_URI="${{ vars.LOGIN_REDIRECT_URI }}"
