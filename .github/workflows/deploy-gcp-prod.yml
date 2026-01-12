@@ -5,8 +5,9 @@ on:
 
 jobs:
   migrate-db:
-    name: ${{ vars.MIGRATE_APP_DB_JOB_NAME }}
+    name: Apply Migrations
     runs-on: ubuntu-latest
+    environment: gcp-prod
     steps:
       - uses: actions/checkout@v4
 
@@ -24,12 +25,17 @@ jobs:
 
   deploy:
     needs: migrate-db
-    name: ${{ vars.DEPLOY_JOB_NAME }}
+    name: Build Image And Push to Cloud Run
     runs-on: ubuntu-latest
     environment: gcp-prod
     env:
       IMAGE_NAME: gcr.io/${{ secrets.GCP_PROJECT_ID }}/site:latest
     steps:
+      - name: Debug environment vars
+        run: |
+          echo "ORIGINS = '${{ vars.ORIGINS }}'"
+          echo "DEPLOY_JOB_NAME = '${{ vars.DEPLOY_JOB_NAME }}'"
+          echo "MIGRATE_APP_DB_JOB_NAME = '${{ vars.MIGRATE_APP_DB_JOB_NAME }}'"
       # Git checkout
       - name: Checkout
         uses: actions/checkout@v2
