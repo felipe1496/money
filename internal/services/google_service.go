@@ -65,7 +65,7 @@ func (s *googleServiceImpl) GetUserAccessToken(code string) (*string, error) {
 	data.Set("code", code)
 	data.Set("client_id", os.Getenv("GOOGLE_CLIENT_ID"))
 	data.Set("client_secret", os.Getenv("GOOGLE_CLIENT_SECRET"))
-	data.Set("redirect_uri", "http://localhost:3000/login")
+	data.Set("redirect_uri", os.Getenv("LOGIN_REDIRECT_URI"))
 	data.Set("grant_type", "authorization_code")
 
 	req, err := http.NewRequest(
