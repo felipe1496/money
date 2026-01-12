@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/felipe1496/open-wallet/config"
 	docs "github.com/felipe1496/open-wallet/docs"
 
 	"github.com/felipe1496/open-wallet/internal/resources/auth"
@@ -35,7 +36,7 @@ func main() {
 	}
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     config.GetEnv().Origins,
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
