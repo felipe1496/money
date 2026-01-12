@@ -30,6 +30,10 @@ func (r *UsersRepoImpl) ListUsers(filter UserFilter) ([]User, error) {
 		query = query.Where(squirrel.Eq{"email": filter.Email})
 	}
 
+	if filter.Username != "" {
+		query = query.Where(squirrel.Eq{"username": filter.Username})
+	}
+
 	sql, args, err := query.ToSql()
 	if err != nil {
 		return nil, err
