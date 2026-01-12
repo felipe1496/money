@@ -37,6 +37,8 @@ func main() {
 	origins := os.Getenv("ORIGINS")
 	if origins == "" {
 		log.Fatal("ORIGINS cannot be empty")
+	} else {
+		log.Println("ORIGINS:", origins)
 	}
 
 	originsList := strings.Split(origins, ",")
