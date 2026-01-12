@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"strings"
 	"time"
 
 	docs "github.com/felipe1496/open-wallet/docs"
@@ -34,15 +33,15 @@ func main() {
 		log.Println("Error loading .env file")
 	}
 
-	origins := os.Getenv("ORIGINS")
+	/* origins := os.Getenv("ORIGINS")
 	if origins == "" {
 		log.Fatal("ORIGINS cannot be empty")
 	}
 
-	originsList := strings.Split(origins, ",")
+	originsList := strings.Split(origins, ",") */
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     originsList,
+		AllowOrigins:     []string{"https://openwallet.vercel.app"},
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
