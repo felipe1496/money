@@ -2,9 +2,10 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 	"time"
 
-	"github.com/felipe1496/open-wallet/config"
 	docs "github.com/felipe1496/open-wallet/docs"
 
 	"github.com/felipe1496/open-wallet/internal/resources/auth"
@@ -30,11 +31,18 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Nenhum arquivo .env encontrado")
+		log.Println("Error loading .env file")
 	}
 
+	origins := os.Getenv("ORIGINS")
+	if origins == "" {
+		log.Fatal("ORIGINS cannot be empty")
+	}
+
+	originsList := strings.Split(origins, ",")
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     config.GetEnv().Origins,
+		AllowOrigins:     originsList,
 		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -46,7 +54,7 @@ func main() {
 	transactions.Router(r)
 	categories.Router(r)
 
-	port := config.GetEnv().Port
+	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
