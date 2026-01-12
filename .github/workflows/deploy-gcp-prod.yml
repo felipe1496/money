@@ -5,6 +5,7 @@ on:
 
 jobs:
   migrate-db:
+    name: Apply Database Migrations
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
