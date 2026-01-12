@@ -22,7 +22,10 @@ func GetEnv() Variables {
 	port := os.Getenv("PORT")
 	origins := os.Getenv("ORIGINS")
 
-	originsList := strings.Split(origins, ",")
+	var originsList []string
+	if origins != "" {
+		originsList = strings.Split(origins, ",")
+	}
 
 	return Variables{
 		GoogleClientID:     googleClientID,
