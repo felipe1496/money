@@ -15,8 +15,8 @@ type TransactionsUseCase interface {
 	ListViewEntries(filter *utils.QueryOptsBuilder) ([]ViewEntry, error)
 	CountViewEntries(filter *utils.QueryOptsBuilder) (int, error)
 	DeleteTransactionById(id string) error
-	CreateTransaction(payload CreateTransactionDTO2) (Transaction, error)
-	UpdateTransaction(transactionID string, userID string, payload UpdateTransactionDTO2) (Transaction, error)
+	CreateTransaction(payload CreateTransactionDTO) (Transaction, error)
+	UpdateTransaction(transactionID string, userID string, payload UpdateTransactionDTO) (Transaction, error)
 }
 
 type TransactionsUseCaseImpl struct {
@@ -31,53 +31,6 @@ func NewTransactionsUseCase(repo TransactionsRepo, categoriesUseCase categories.
 		categoriesUseCase,
 		db,
 	}
-}
-
-func (uc *TransactionsUseCaseImpl) CreateSimpleExpense(payload CreateSimpleExpenseDTO) (string, error) {
-	conn, err := uc.db.Begin()
-
-	if err != nil {
-		return "", err
-	}
-
-	defer func() {
-		if err != nil {
-			conn.Rollback()
-			return
-		}
-	}()
-
-	transaction, err := uc.repo.CreateTransaction(conn, CreateTransactionDTO{
-		UserID:      payload.UserID,
-		Type:        constants.SimpleExpense,
-		Name:        payload.Name,
-		Description: &payload.Description,
-		CategoryID:  payload.CategoryID,
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	if payload.Amount > 0 {
-		payload.Amount = payload.Amount * -1
-	}
-
-	_, err = uc.repo.CreateEntry(conn, CreateEntryDTO{
-		TransactionID: transaction.ID,
-		Amount:        payload.Amount,
-		ReferenceDate: payload.ReferenceDate,
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	if err := conn.Commit(); err != nil {
-		return "", err
-	}
-
-	return transaction.ID, nil
 }
 
 func (uc *TransactionsUseCaseImpl) ListViewEntries(filter *utils.QueryOptsBuilder) ([]ViewEntry, error) {
@@ -169,7 +122,7 @@ func validateTransaction(payload validadeTransactionProps) error {
 	return nil
 }
 
-func (uc *TransactionsUseCaseImpl) CreateTransaction(payload CreateTransactionDTO2) (Transaction, error) {
+func (uc *TransactionsUseCaseImpl) CreateTransaction(payload CreateTransactionDTO) (Transaction, error) {
 
 	err := validateTransaction(validadeTransactionProps{
 		Entries: func() []validateTransactionPropsEntry {
@@ -195,11 +148,11 @@ func (uc *TransactionsUseCaseImpl) CreateTransaction(payload CreateTransactionDT
 	}
 
 	transaction, err := uc.repo.CreateTransaction(tx, CreateTransactionDTO{
-		UserID:      payload.UserID,
-		Type:        payload.Type,
-		Name:        payload.Name,
-		Description: payload.Note,
-		CategoryID:  payload.CategoryID,
+		UserID:     payload.UserID,
+		Type:       payload.Type,
+		Name:       payload.Name,
+		Note:       payload.Note,
+		CategoryID: payload.CategoryID,
 	})
 
 	if err != nil {
@@ -213,7 +166,7 @@ func (uc *TransactionsUseCaseImpl) CreateTransaction(payload CreateTransactionDT
 		} else if payload.Type == constants.Income && entry.Amount < 0 {
 			entry.Amount = entry.Amount * -1
 		}
-		_, err = uc.repo.CreateEntry(tx, CreateEntryDTO{
+		_, err = uc.repo.CreateEntry(tx, PersistEntryDTO{
 			TransactionID: transaction.ID,
 			Amount:        entry.Amount,
 			ReferenceDate: entry.ReferenceDate,
@@ -234,7 +187,7 @@ func (uc *TransactionsUseCaseImpl) CreateTransaction(payload CreateTransactionDT
 	return transaction, nil
 }
 
-func (uc *TransactionsUseCaseImpl) UpdateTransaction(transactionID string, userID string, payload UpdateTransactionDTO2) (t Transaction, err error) {
+func (uc *TransactionsUseCaseImpl) UpdateTransaction(transactionID string, userID string, payload UpdateTransactionDTO) (t Transaction, err error) {
 	tx, err := uc.db.Begin()
 	defer func() {
 		if tx == nil {
@@ -276,7 +229,7 @@ func (uc *TransactionsUseCaseImpl) UpdateTransaction(transactionID string, userI
 	}
 
 	if utils.ContainsSome(payload.Update, []string{"name", "note", "category_id"}) {
-		_, err = uc.repo.UpdateTransaction(tx, transactionID, UpdateTransactionDTO2{
+		_, err = uc.repo.UpdateTransaction(tx, transactionID, UpdateTransactionDTO{
 			Update:     payload.Update,
 			Name:       payload.Name,
 			Note:       payload.Note,
@@ -314,9 +267,8 @@ func (uc *TransactionsUseCaseImpl) UpdateTransaction(transactionID string, userI
 			return Transaction{}, utils.NewHTTPError(http.StatusInternalServerError, "failed to delete previous entries")
 		}
 
-		for i, entry := range *payload.Entries {
-			fmt.Printf(">>> Calling CreateEntry [%d]\n", i)
-			_, err = uc.repo.CreateEntry(tx, CreateEntryDTO{
+		for _, entry := range *payload.Entries {
+			_, err = uc.repo.CreateEntry(tx, PersistEntryDTO{
 				TransactionID: exists[0].TransactionID,
 				Amount:        entry.Amount,
 				ReferenceDate: entry.ReferenceDate,

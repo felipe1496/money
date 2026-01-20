@@ -10,13 +10,13 @@ import (
 )
 
 type TransactionsRepo interface {
-	CreateEntry(db utils.Executer, payload CreateEntryDTO) (Entry, error)
+	CreateEntry(db utils.Executer, payload PersistEntryDTO) (Entry, error)
 	CreateTransaction(db utils.Executer, payload CreateTransactionDTO) (Transaction, error)
 	ListViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) ([]ViewEntry, error)
 	CountViewEntries(db utils.Executer, filter *utils.QueryOptsBuilder) (int, error)
 	DeleteTransactionById(db utils.Executer, id string) error
 	ListTransactions(db utils.Executer, filter *utils.QueryOptsBuilder) ([]Transaction, error)
-	UpdateTransaction(db utils.Executer, id string, payload UpdateTransactionDTO2) (Transaction, error)
+	UpdateTransaction(db utils.Executer, id string, payload UpdateTransactionDTO) (Transaction, error)
 	DeleteEntry(db utils.Executer, filter *utils.QueryOptsBuilder) error
 }
 
@@ -27,7 +27,7 @@ func NewTransactionsRepo(db utils.Executer) TransactionsRepo {
 	return &TransactionsRepoImpl{}
 }
 
-func (r *TransactionsRepoImpl) CreateEntry(db utils.Executer, payload CreateEntryDTO) (Entry, error) {
+func (r *TransactionsRepoImpl) CreateEntry(db utils.Executer, payload PersistEntryDTO) (Entry, error) {
 	query, args, err := squirrel.Insert("entries").
 		Columns("id", "transaction_id", "amount", "reference_date").
 		Values(ulid.Make().String(), payload.TransactionID, payload.Amount, payload.ReferenceDate).
@@ -53,7 +53,7 @@ func (r *TransactionsRepoImpl) CreateEntry(db utils.Executer, payload CreateEntr
 func (r *TransactionsRepoImpl) CreateTransaction(db utils.Executer, payload CreateTransactionDTO) (Transaction, error) {
 	query, args, err := squirrel.Insert("transactions").
 		Columns("id", "user_id", "category", "name", "description", "category_id").
-		Values(ulid.Make().String(), payload.UserID, payload.Type, payload.Name, &payload.Description, &payload.CategoryID).
+		Values(ulid.Make().String(), payload.UserID, payload.Type, payload.Name, &payload.Note, &payload.CategoryID).
 		Suffix("RETURNING id, user_id, category, name, description, created_at, category_id").
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
@@ -203,7 +203,7 @@ func (r *TransactionsRepoImpl) ListTransactions(db utils.Executer, filter *utils
 	return transactions, nil
 }
 
-func (r *TransactionsRepoImpl) UpdateTransaction(db utils.Executer, id string, payload UpdateTransactionDTO2) (Transaction, error) {
+func (r *TransactionsRepoImpl) UpdateTransaction(db utils.Executer, id string, payload UpdateTransactionDTO) (Transaction, error) {
 	if !utils.HasAtLeastOneField(payload) {
 		return Transaction{}, errors.New("no fields to update")
 	}

@@ -130,7 +130,7 @@ func (api *API) CreateTransaction(ctx *gin.Context) {
 		return
 	}
 
-	transaction, err := api.transactionsUseCase.CreateTransaction(CreateTransactionDTO2{
+	transaction, err := api.transactionsUseCase.CreateTransaction(CreateTransactionDTO{
 		UserID:     userID,
 		Name:       body.Name,
 		CategoryID: body.CategoryID,
@@ -178,11 +178,11 @@ func (api *API) UpdateTransaction(ctx *gin.Context) {
 		return
 	}
 
-	var entriesDTO *[]UpdateEntryDTO2
+	var entriesDTO *[]UpdateEntryDTO
 	if body.Entries != nil {
-		entries := make([]UpdateEntryDTO2, len(*body.Entries))
+		entries := make([]UpdateEntryDTO, len(*body.Entries))
 		for i, entry := range *body.Entries {
-			entries[i] = UpdateEntryDTO2{
+			entries[i] = UpdateEntryDTO{
 				Amount:        entry.Amount,
 				ReferenceDate: entry.ReferenceDate,
 			}
@@ -190,7 +190,7 @@ func (api *API) UpdateTransaction(ctx *gin.Context) {
 		entriesDTO = &entries
 	}
 
-	transaction, err := api.transactionsUseCase.UpdateTransaction(transactionID, userID, UpdateTransactionDTO2{
+	transaction, err := api.transactionsUseCase.UpdateTransaction(transactionID, userID, UpdateTransactionDTO{
 		Update:     body.Update,
 		Name:       body.Name,
 		Note:       body.Note,
