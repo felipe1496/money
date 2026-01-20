@@ -17,7 +17,7 @@ type API struct {
 func NewHandler(db *sql.DB) *API {
 	return &API{
 		transactionsUseCase: NewTransactionsUseCase(NewTransactionsRepo(db),
-			categories.NewCategoriesRepo(db),
+			categories.NewCategoriesUseCase(categories.NewCategoriesRepo(db), db),
 			db),
 	}
 }

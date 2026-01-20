@@ -20,15 +20,15 @@ type TransactionsUseCase interface {
 }
 
 type TransactionsUseCaseImpl struct {
-	repo           TransactionsRepo
-	categoriesRepo categories.CategoriesRepo
-	db             *sql.DB
+	repo              TransactionsRepo
+	categoriesUseCase categories.CategoriesUseCase
+	db                *sql.DB
 }
 
-func NewTransactionsUseCase(repo TransactionsRepo, categoriesRepo categories.CategoriesRepo, db *sql.DB) TransactionsUseCase {
+func NewTransactionsUseCase(repo TransactionsRepo, categoriesUseCase categories.CategoriesUseCase, db *sql.DB) TransactionsUseCase {
 	return &TransactionsUseCaseImpl{
 		repo,
-		categoriesRepo,
+		categoriesUseCase,
 		db,
 	}
 }
@@ -263,7 +263,7 @@ func (uc *TransactionsUseCaseImpl) UpdateTransaction(transactionID string, userI
 
 	fmt.Println(">>> UpdateTransaction - update: ", payload.Update)
 	if payload.CategoryID != nil && utils.Contains(payload.Update, "category_id") {
-		categoryExists, err := uc.categoriesRepo.List(tx, utils.QueryOpts().
+		categoryExists, err := uc.categoriesUseCase.List(utils.QueryOpts().
 			And("id", "eq", *payload.CategoryID).
 			And("user_id", "eq", userID))
 		if err != nil {
