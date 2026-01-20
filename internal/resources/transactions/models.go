@@ -8,9 +8,51 @@ import (
 )
 
 // ==============================================================================
-// 1. HTTP MODELS
-//    Models that represents request or response objects
+//  1. HTTP MODELS
+//     Models that represents request or response objects
+//
 // ==============================================================================
+type CreateTransactionRequest struct {
+	Name       string                    `json:"name" binding:"required"`
+	CategoryID *string                   `json:"category_id" binding:"omitempty"`
+	Note       *string                   `json:"note" binding:"omitempty,min=0,max=400"`
+	Type       constants.TransactionType `json:"type" binding:"required,oneof=installment simple_expense income"`
+	Entries    []CreateEntryRequest      `json:"entries" binding:"required,min=1,max=100,dive"`
+}
+
+type CreateEntryRequest struct {
+	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
+}
+
+type UpdateTransactionRequest struct {
+	Update     []string              `json:"update" binding:"required,min=1,dive,oneof=name category_id note entries"`
+	Name       *string               `json:"name" binding:"omitempty,min=1,max=100"`
+	CategoryID *string               `json:"category_id" binding:"omitempty"`
+	Note       *string               `json:"note" binding:"omitempty,min=2,max=400"`
+	Entries    *[]UpdateEntryRequest `json:"entries" binding:"omitempty,min=1,max=100,dive"`
+}
+
+type UpdateEntryRequest struct {
+	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
+}
+
+type UpdateTransactionResponse struct {
+	Data UpdateTransactionResponseData `json:"data"`
+}
+
+type UpdateTransactionResponseData struct {
+	Transaction Transaction `json:"transaction"`
+}
+
+type CreateTransactionResponse struct {
+	Data CreateTransactionResponseData `json:"data"`
+}
+
+type CreateTransactionResponseData struct {
+	Transaction Transaction `json:"transaction"`
+}
 
 // Request body to create a simple expense
 type CreateSimpleExpenseRequest struct {
@@ -125,6 +167,33 @@ type UpdateIncomeRequest struct {
 //    Models that represents data transfer objects between api layers
 // ==============================================================================
 
+type CreateTransactionDTO2 struct {
+	UserID     string
+	Name       string
+	CategoryID *string
+	Note       *string
+	Type       constants.TransactionType
+	Entries    []CreateEntryRequest
+}
+
+type CreateEntryDTO2 struct {
+	Amount        float64
+	ReferenceDate string
+}
+
+type UpdateTransactionDTO2 struct {
+	Update     []string
+	Name       *string
+	Note       *string
+	CategoryID *string
+	Entries    *[]UpdateEntryDTO2
+}
+
+type UpdateEntryDTO2 struct {
+	Amount        float64
+	ReferenceDate string
+}
+
 // Payload to create a transaction in the database
 type CreateTransactionDTO struct {
 	UserID      string
@@ -201,8 +270,8 @@ type UpdateTransactionDTO struct {
 }
 
 type UpdateEntryDTO struct {
-	Amount        *float64
-	ReferenceDate *string
+	Amount        float64
+	ReferenceDate string
 }
 
 // ==============================================================================
@@ -241,11 +310,11 @@ type Entry struct {
 
 // Transactions table record
 type Transaction struct {
-	ID          string
-	UserID      string
-	Type        constants.TransactionType
-	Name        string
-	Description *string
-	CreatedAt   time.Time
-	CategoryID  *string
+	ID          string                    `json:"id"`
+	UserID      string                    `json:"user_id"`
+	Type        constants.TransactionType `json:"type"`
+	Name        string                    `json:"name"`
+	Description *string                   `json:"description"`
+	CreatedAt   time.Time                 `json:"created_at"`
+	CategoryID  *string                   `json:"category_id"`
 }

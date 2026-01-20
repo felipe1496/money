@@ -21,30 +21,18 @@ func Router(router *gin.Engine) {
 	handler := NewHandler(db)
 	transactionsGroup := router.Group("/api/v1/transactions")
 	{
-		transactionsGroup.POST("/simple-expense",
-			middlewares.RequireAuthMiddleware(jwtService),
-			handler.CreateSimpleExpense)
-		transactionsGroup.GET("/entries/:period",
+		transactionsGroup.GET("/entries",
 			middlewares.RequireAuthMiddleware(jwtService),
 			middlewares.QueryOptsMiddleware(),
-			handler.ListViewEntries)
+			handler.ListEntries)
 		transactionsGroup.DELETE("/:transaction_id",
 			middlewares.RequireAuthMiddleware(jwtService),
 			handler.DeleteTransaction)
-		transactionsGroup.POST("/income",
+		transactionsGroup.POST("",
 			middlewares.RequireAuthMiddleware(jwtService),
-			handler.CreateIncome)
-		transactionsGroup.POST("/installment",
+			handler.CreateTransaction)
+		transactionsGroup.PATCH("/:transaction_id",
 			middlewares.RequireAuthMiddleware(jwtService),
-			handler.CreateInstallment)
-		transactionsGroup.PATCH("/simple-expense/:transaction_id",
-			middlewares.RequireAuthMiddleware(jwtService),
-			handler.UpdateSimpleExpense)
-		transactionsGroup.PATCH("/income/:transaction_id",
-			middlewares.RequireAuthMiddleware(jwtService),
-			handler.UpdateIncome)
-		transactionsGroup.PATCH("/installment/:transaction_id/entry/:entry_id",
-			middlewares.RequireAuthMiddleware(jwtService),
-			handler.UpdateInstallment)
+			handler.UpdateTransaction)
 	}
 }

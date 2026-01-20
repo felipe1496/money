@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/felipe1496/open-wallet/internal/constants"
+	"github.com/felipe1496/open-wallet/internal/resources/categories"
 	"github.com/felipe1496/open-wallet/internal/utils"
 
 	"github.com/gin-gonic/gin"
@@ -16,112 +16,10 @@ type API struct {
 
 func NewHandler(db *sql.DB) *API {
 	return &API{
-		transactionsUseCase: NewTransactionsUseCase(NewTransactionsRepo(db), db),
+		transactionsUseCase: NewTransactionsUseCase(NewTransactionsRepo(db),
+			categories.NewCategoriesRepo(db),
+			db),
 	}
-}
-
-// @Summary Create a Simple Expense
-// @Description Create a Simple Expense transaction and entry
-// @Tags transactions
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param body body CreateSimpleExpenseRequest true "Simple Expense payload"
-// @Success 201 {object} CreateSimpleExpenseResponse "Simple Expense created"
-// @Failure 401 {object} utils.HTTPError "Unauthorized"
-// @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/simple-expense [post]
-func (api *API) CreateSimpleExpense(ctx *gin.Context) {
-	var body CreateSimpleExpenseRequest
-
-	err := ctx.ShouldBindJSON(&body)
-
-	if err != nil {
-		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	id, err := api.transactionsUseCase.CreateSimpleExpense(CreateSimpleExpenseDTO{
-		Name:          body.Name,
-		Amount:        body.Amount,
-		ReferenceDate: body.ReferenceDate,
-		Description:   body.Description,
-		UserID:        ctx.GetString("user_id"),
-		CategoryID:    body.CategoryID,
-	})
-
-	if err != nil {
-		apiErr := err.(*utils.HTTPError)
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	entries, err := api.transactionsUseCase.ListViewEntries(utils.QueryOpts().And("transaction_id", "eq", id))
-
-	if err != nil {
-		apiErr := err.(*utils.HTTPError)
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, CreateSimpleExpenseResponse{
-		Data: CreateSimpleExpenseResponseData{
-			Entry: entries[0],
-		},
-	})
-}
-
-// @Summary Create an income
-// @Description Create an income transactions and entry
-// @Tags transactions
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param body body CreateIncomeRequest true "Income payload"
-// @Success 201 {object} CreateIncomeResponse "Income transaction created"
-// @Failure 401 {object} utils.HTTPError "Unauthorized"
-// @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/income [post]
-func (api *API) CreateIncome(ctx *gin.Context) {
-	var body CreateIncomeRequest
-
-	err := ctx.ShouldBindJSON(&body)
-
-	if err != nil {
-		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	id, err := api.transactionsUseCase.CreateIncome(CreateIncomeDTO{
-		Name:          body.Name,
-		Amount:        body.Amount,
-		ReferenceDate: body.ReferenceDate,
-		Description:   body.Description,
-		UserID:        ctx.GetString("user_id"),
-		CategoryID:    body.CategoryID,
-	})
-
-	if err != nil {
-		apiErr := err.(*utils.HTTPError)
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	entries, err := api.transactionsUseCase.ListViewEntries(utils.QueryOpts().And("transaction_id", "eq", id))
-
-	if err != nil {
-		apiErr := err.(*utils.HTTPError)
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, CreateIncomeResponse{
-		Data: CreateIncomeResponseData{
-			Entry: entries[0],
-		},
-	})
 }
 
 // @Summary List entries
@@ -130,22 +28,18 @@ func (api *API) CreateIncome(ctx *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param period path string true "period in format YYYYMM"
 // @Param page query int false "Page number" default(1)
 // @Param per_page query int false "Items per page" default(10)
-// @Param order_by query string false "Sort field" example(name)
-// @Param order query string false "Sort order (asc/desc)" Enums(asc, desc) default(asc)
+// @Param order_by query string false "Sort field" example(name:asc,created_at:desc)
 // @Success 200 {object} ListEntriesResponse "List of entries"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
 // @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/entries/{period} [get]
-func (api *API) ListViewEntries(ctx *gin.Context) {
+// @Router /transactions/entries [get]
+func (api *API) ListEntries(ctx *gin.Context) {
 	userID := ctx.GetString("user_id")
-	period := ctx.Param("period")
 	page := ctx.GetInt("page")
 	perPage := ctx.GetInt("per_page")
-	queryOpts := ctx.MustGet("query_opts").(*utils.QueryOptsBuilder).And("user_id", "eq", userID).
-		And("period", "eq", period)
+	queryOpts := ctx.MustGet("query_opts").(*utils.QueryOptsBuilder).And("user_id", "eq", userID)
 
 	entries, err := api.transactionsUseCase.ListViewEntries(queryOpts)
 
@@ -156,8 +50,7 @@ func (api *API) ListViewEntries(ctx *gin.Context) {
 	}
 
 	count, err := api.transactionsUseCase.CountViewEntries(utils.QueryOpts().
-		And("user_id", "eq", userID).
-		And("period", "eq", period))
+		And("user_id", "eq", userID))
 
 	if err != nil {
 		apiErr := err.(*utils.HTTPError)
@@ -213,19 +106,21 @@ func (api *API) DeleteTransaction(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
-// @Summary Create an installment
-// @Description Create an installment transactions and entries
+// @Summary Create a transaction
+// @Description Create a transaction with all of it entries
 // @Tags transactions
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param body body CreateInstallmentRequest true "Installment payload"
-// @Success 201 {object} CreateInstallmentResponse "Transaction created"
+// @Param body body CreateTransactionRequest true "Transaction payload"
+// @Success 200 {object} CreateTransactionResponse "Installment updated"
+// @Failure 400 {object} utils.HTTPError "Bad request"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
 // @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/installment [post]
-func (api *API) CreateInstallment(ctx *gin.Context) {
-	var body CreateInstallmentRequest
+// @Router /transactions [post]
+func (api *API) CreateTransaction(ctx *gin.Context) {
+	userID := ctx.GetString("user_id")
+	var body CreateTransactionRequest
 
 	err := ctx.ShouldBindJSON(&body)
 
@@ -235,172 +130,83 @@ func (api *API) CreateInstallment(ctx *gin.Context) {
 		return
 	}
 
-	entries, err := api.transactionsUseCase.CreateInstallment(CreateInstallmentDTO{
-		Name:              body.Name,
-		TotalAmount:       body.TotalAmount,
-		TotalInstallments: body.TotalInstallments,
-		ReferenceDate:     body.ReferenceDate,
-		Description:       body.Description,
-		UserID:            ctx.GetString("user_id"),
-		CategoryID:        body.CategoryID,
+	transaction, err := api.transactionsUseCase.CreateTransaction(CreateTransactionDTO2{
+		UserID:     userID,
+		Name:       body.Name,
+		CategoryID: body.CategoryID,
+		Note:       body.Note,
+		Type:       body.Type,
+		Entries:    body.Entries,
 	})
 
-	ctx.JSON(http.StatusCreated, CreateInstallmentResponse{
-		Data: CreateInstallmentResponseData{
-			Entries: entries,
+	if err != nil {
+		apiErr := utils.GetApiErr(err)
+		ctx.JSON(apiErr.StatusCode, apiErr)
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, CreateTransactionResponse{
+		Data: CreateTransactionResponseData{
+			Transaction: transaction,
 		},
 	})
 }
 
-// @Summary Update a simple expense
-// @Description Update a simple expense
+// @Summary Update a transaction
+// @Description Update a transaction
 // @Tags transactions
 // @Security BearerAuth
 // @Accept json
 // @Produce json
 // @Param transaction_id path string true "transaction ID"
-// @Param body body UpdateSimpleExpenseRequest true "Simple expense payload"
-// @Success 200 {object} UpdateSimpleExpenseResponse "Simple expense updated"
+// @Param body body UpdateTransactionRequest true "Installment payload"
+// @Success 200 {object} UpdateTransactionResponse "Installment updated"
 // @Failure 400 {object} utils.HTTPError "Bad request"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
 // @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/simple-expense/{transaction_id} [patch]
-func (api *API) UpdateSimpleExpense(ctx *gin.Context) {
+// @Router /transactions/{transaction_id} [patch]
+func (api *API) UpdateTransaction(ctx *gin.Context) {
+	userID := ctx.GetString("user_id")
 	transactionID := ctx.Param("transaction_id")
+	var body UpdateTransactionRequest
 
-	var body UpdateSimpleExpenseRequest
-
-	if err := ctx.ShouldBindJSON(&body); err != nil {
+	err := ctx.ShouldBindJSON(&body)
+	if err != nil {
 		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
 		ctx.JSON(apiErr.StatusCode, apiErr)
+		ctx.Abort()
 		return
 	}
 
-	entry, err := api.transactionsUseCase.UpdateSimpleExpense(transactionID, UpdateSimpleExpenseDTO{
-		Name:          body.Name,
-		Description:   body.Description,
-		Amount:        body.Amount,
-		ReferenceDate: body.ReferenceDate,
-		CategoryID:    body.CategoryID,
+	var entriesDTO *[]UpdateEntryDTO2
+	if body.Entries != nil {
+		entries := make([]UpdateEntryDTO2, len(*body.Entries))
+		for i, entry := range *body.Entries {
+			entries[i] = UpdateEntryDTO2{
+				Amount:        entry.Amount,
+				ReferenceDate: entry.ReferenceDate,
+			}
+		}
+		entriesDTO = &entries
+	}
+
+	transaction, err := api.transactionsUseCase.UpdateTransaction(transactionID, userID, UpdateTransactionDTO2{
+		Update:     body.Update,
+		Name:       body.Name,
+		Note:       body.Note,
+		CategoryID: body.CategoryID,
+		Entries:    entriesDTO,
 	})
 
 	if err != nil {
-		apiErr := err.(*utils.HTTPError)
+		apiErr := utils.GetApiErr(err)
 		ctx.JSON(apiErr.StatusCode, apiErr)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, UpdateSimpleExpenseResponse{
-		Data: UpdateSimpleExpenseResponseData{
-			Entry: entry,
-		},
-	})
-}
-
-// @Summary Update a income
-// @Description Update a cinome
-// @Tags transactions
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param transaction_id path string true "transaction ID"
-// @Param body body UpdateIncomeRequest true "Income payload"
-// @Success 200 {object} UpdateIncomeResponse "Income updated"
-// @Failure 400 {object} utils.HTTPError "Bad request"
-// @Failure 401 {object} utils.HTTPError "Unauthorized"
-// @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/income/{transaction_id} [patch]
-func (api *API) UpdateIncome(ctx *gin.Context) {
-	transactionID := ctx.Param("transaction_id")
-
-	var body UpdateIncomeRequest
-
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	entry, err := api.transactionsUseCase.UpdateIncome(transactionID, UpdateIncomeDTO{
-		Name:          body.Name,
-		Description:   body.Description,
-		Amount:        body.Amount,
-		ReferenceDate: body.ReferenceDate,
-		CategoryID:    body.CategoryID,
-	})
-
-	if err != nil {
-		apiErr := err.(*utils.HTTPError)
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, UpdateIncomeResponse{
-		Data: UpdateIncomeResponseData{
-			Entry: entry,
-		},
-	})
-}
-
-// @Summary Update a income
-// @Description Update a cinome
-// @Tags transactions
-// @Security BearerAuth
-// @Accept json
-// @Produce json
-// @Param transaction_id path string true "transaction ID"
-// @Param entry_id path string true "entry ID"
-// @Param body body UpdateInstallmentRequest true "Installment payload"
-// @Param scope query string false "Scope" Enums(following, all)"
-// @Success 200 {object} UpdateInstallmentResponse "Installment updated"
-// @Failure 400 {object} utils.HTTPError "Bad request"
-// @Failure 401 {object} utils.HTTPError "Unauthorized"
-// @Failure 500 {object} utils.HTTPError "Internal server error"
-// @Router /transactions/installment/{transaction_id}/entry/{entry_id} [patch]
-func (api *API) UpdateInstallment(ctx *gin.Context) {
-	transactionID := ctx.Param("transaction_id")
-	entryID := ctx.Param("entry_id")
-	scopeStr := ctx.DefaultQuery("scope", constants.ThisOne)
-
-	validScopes := map[string]bool{
-		constants.ThisOne:          true,
-		constants.ThisAndFollowing: true,
-		constants.All:              true,
-	}
-
-	if !validScopes[scopeStr] {
-		apiErr := utils.NewHTTPError(http.StatusBadRequest, "invalid scope")
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	scope := constants.InstanceType(scopeStr)
-
-	var body UpdateInstallmentRequest
-
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		apiErr := utils.NewHTTPError(http.StatusBadRequest, err.Error())
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	entries, err := api.transactionsUseCase.UpdateInstallment(transactionID, entryID, scope, UpdateInstallmentDTO{
-		Name:        body.Name,
-		Description: body.Description,
-		Amount:      body.Amount,
-		CategoryID:  body.CategoryID,
-		UserID:      ctx.GetString("user_id"),
-	})
-
-	if err != nil {
-		apiErr := err.(*utils.HTTPError)
-		ctx.JSON(apiErr.StatusCode, apiErr)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, UpdateInstallmentResponse{
-		Data: UpdateInstallmentResponseData{
-			Entries: entries,
+	ctx.JSON(http.StatusOK, UpdateTransactionResponse{
+		Data: UpdateTransactionResponseData{
+			Transaction: transaction,
 		},
 	})
 }

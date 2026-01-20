@@ -69,8 +69,7 @@ func (api *API) Create(ctx *gin.Context) {
 // @Produce json
 // @Param page query int false "Page number" default(1)
 // @Param per_page query int false "Items per page" default(10)
-// @Param sort query string false "Sort field" example(name)
-// @Param order query string false "Sort order (asc/desc)" Enums(asc, desc) default(asc)
+// @Param order_by query string false "Sort field" example(name:asc,created_at:desc)
 // @Param filter query string false "Category filter"
 // @Param name query string false "A category name to filter by"
 // @Success 200 {object} ListCategoriesResponse "List of categories"
@@ -160,8 +159,7 @@ func (api *API) DeleteByID(ctx *gin.Context) {
 // @Param page query int false "Page number" default(1)
 // @Param per_page query int false "Items per page" default(10)
 // @Param filter query string false "Category filter"
-// @Param sort query string false "Sort field" example(name)
-// @Param order query string false "Sort order (asc/desc)" Enums(asc, desc) default(asc)
+// @Param order_by query string false "Sort field" example(name:asc,created_at:desc)
 // @Success 200 {object} ListCategoryAmountPerPeriodResponse "List of categories with amount per period"
 // @Failure 401 {object} utils.HTTPError "Unauthorized"
 // @Failure 500 {object} utils.HTTPError "Internal server error"

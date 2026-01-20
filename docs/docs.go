@@ -96,20 +96,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "name",
+                        "example": "name:asc,created_at:desc",
                         "description": "Sort field",
-                        "name": "sort",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "default": "asc",
-                        "description": "Sort order (asc/desc)",
-                        "name": "order",
+                        "name": "order_by",
                         "in": "query"
                     },
                     {
@@ -358,20 +347,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "name",
+                        "example": "name:asc,created_at:desc",
                         "description": "Sort field",
-                        "name": "sort",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "default": "asc",
-                        "description": "Sort order (asc/desc)",
-                        "name": "order",
+                        "name": "order_by",
                         "in": "query"
                     }
                 ],
@@ -397,7 +375,64 @@ const docTemplate = `{
                 }
             }
         },
-        "/transactions/entries/{period}": {
+        "/transactions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a transaction with all of it entries",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Create a transaction",
+                "parameters": [
+                    {
+                        "description": "Transaction payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateTransactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installment updated",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.CreateTransactionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/transactions/entries": {
             "get": {
                 "security": [
                     {
@@ -417,13 +452,6 @@ const docTemplate = `{
                 "summary": "List entries",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "period in format YYYYMM",
-                        "name": "period",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "default": 1,
                         "description": "Page number",
@@ -439,20 +467,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "name",
+                        "example": "name:asc,created_at:desc",
                         "description": "Sort field",
                         "name": "order_by",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "asc",
-                            "desc"
-                        ],
-                        "type": "string",
-                        "default": "asc",
-                        "description": "Sort order (asc/desc)",
-                        "name": "order",
                         "in": "query"
                     }
                 ],
@@ -890,6 +907,68 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a transaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Update a transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "transaction ID",
+                        "name": "transaction_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Installment payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateTransactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installment updated",
+                        "schema": {
+                            "$ref": "#/definitions/transactions.UpdateTransactionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/utils.HTTPError"
+                        }
+                    }
+                }
             }
         }
     },
@@ -1081,6 +1160,23 @@ const docTemplate = `{
                 "Installment"
             ]
         },
+        "transactions.CreateEntryRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "reference_date"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "maximum": 999999,
+                    "minimum": 0
+                },
+                "reference_date": {
+                    "type": "string"
+                }
+            }
+        },
         "transactions.CreateIncomeRequest": {
             "type": "object",
             "required": [
@@ -1223,6 +1319,63 @@ const docTemplate = `{
                 }
             }
         },
+        "transactions.CreateTransactionRequest": {
+            "type": "object",
+            "required": [
+                "entries",
+                "name",
+                "type"
+            ],
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "entries": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/transactions.CreateEntryRequest"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string",
+                    "maxLength": 400,
+                    "minLength": 0
+                },
+                "type": {
+                    "enum": [
+                        "installment",
+                        "simple_expense",
+                        "income"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/constants.TransactionType"
+                        }
+                    ]
+                }
+            }
+        },
+        "transactions.CreateTransactionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.CreateTransactionResponseData"
+                }
+            }
+        },
+        "transactions.CreateTransactionResponseData": {
+            "type": "object",
+            "properties": {
+                "transaction": {
+                    "$ref": "#/definitions/transactions.Transaction"
+                }
+            }
+        },
         "transactions.ListEntriesResponse": {
             "type": "object",
             "properties": {
@@ -1242,6 +1395,49 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/transactions.ViewEntry"
                     }
+                }
+            }
+        },
+        "transactions.Transaction": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/constants.TransactionType"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "transactions.UpdateEntryRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "reference_date"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "maximum": 999999,
+                    "minimum": 0
+                },
+                "reference_date": {
+                    "type": "string"
                 }
             }
         },
@@ -1353,6 +1549,52 @@ const docTemplate = `{
             "properties": {
                 "entry": {
                     "$ref": "#/definitions/transactions.ViewEntry"
+                }
+            }
+        },
+        "transactions.UpdateTransactionRequest": {
+            "type": "object",
+            "required": [
+                "entries",
+                "name"
+            ],
+            "properties": {
+                "category_id": {
+                    "type": "string"
+                },
+                "entries": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/transactions.UpdateEntryRequest"
+                    }
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "note": {
+                    "type": "string",
+                    "maxLength": 400,
+                    "minLength": 2
+                }
+            }
+        },
+        "transactions.UpdateTransactionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/transactions.UpdateTransactionResponseData"
+                }
+            }
+        },
+        "transactions.UpdateTransactionResponseData": {
+            "type": "object",
+            "properties": {
+                "transaction": {
+                    "$ref": "#/definitions/transactions.Transaction"
                 }
             }
         },

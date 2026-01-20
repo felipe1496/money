@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,19 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+func DelayMiddleware(delay time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		delayStr := os.Getenv("DELAY")
+		if delayStr != "" {
+			delayNum, err := strconv.Atoi(delayStr)
+			if err == nil {
+				time.Sleep(time.Duration(delayNum) * time.Millisecond)
+			}
+		}
+		c.Next()
+	}
+}
+
 // @title Money API
 // @securityDefinitions.apikey BearerAuth
 // @in header
@@ -28,6 +42,8 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	// add swagger
 	r.GET("/api-docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
+	r.Use(DelayMiddleware(2 * time.Second))
 
 	err := godotenv.Load()
 	if err != nil {

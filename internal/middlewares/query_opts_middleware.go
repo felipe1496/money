@@ -16,7 +16,6 @@ func QueryOptsMiddleware() gin.HandlerFunc {
 		page, _ := ctx.GetQuery("page")
 		perPage, _ := ctx.GetQuery("per_page")
 		orderBy, _ := ctx.GetQuery("order_by")
-		order, _ := ctx.GetQuery("order")
 		pageNum, err := strconv.Atoi(page)
 
 		if err != nil {
@@ -33,8 +32,40 @@ func QueryOptsMiddleware() gin.HandlerFunc {
 		queryOpts.Offset((pageNum - 1) * perPageNum)
 		queryOpts.Limit(perPageNum + 1)
 
-		if orderBy != "" && order != "" {
-			queryOpts.OrderBy(orderBy, order)
+		if orderBy != "" {
+			splittedByComma := strings.Split(orderBy, ",")
+
+			for _, field := range splittedByComma {
+				field = strings.TrimSpace(field)
+
+				if field == "" {
+					continue
+				}
+
+				splittedByColon := strings.Split(field, ":")
+				fieldName := strings.TrimSpace(splittedByColon[0])
+
+				if fieldName == "" {
+					apiErr := utils.NewHTTPError(http.StatusBadRequest, "invalid order_by: empty field name")
+					ctx.JSON(apiErr.StatusCode, apiErr)
+					ctx.Abort()
+					return
+				}
+
+				direction := "asc"
+				if len(splittedByColon) > 1 {
+					direction = strings.ToLower(strings.TrimSpace(splittedByColon[1]))
+
+					if direction != "asc" && direction != "desc" {
+						apiErr := utils.NewHTTPError(http.StatusBadRequest, "invalid order: must be 'asc' or 'desc'")
+						ctx.JSON(apiErr.StatusCode, apiErr)
+						ctx.Abort()
+						return
+					}
+				}
+
+				queryOpts.OrderBy(fieldName, direction)
+			}
 		}
 
 		filter, _ := ctx.GetQuery("filter")
