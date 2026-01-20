@@ -1,9 +1,14 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"reflect"
+
+	"github.com/gin-gonic/gin"
 )
 
 func HasAtLeastOneField(v interface{}) bool {
@@ -40,5 +45,43 @@ func GetApiErr(err error) *HTTPError {
 	} else {
 		return NewHTTPError(http.StatusInternalServerError, "an unexpected error occurred")
 	}
+}
 
+func GetJSONKeys(c *gin.Context) ([]string, error) {
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	var jsonData map[string]interface{}
+	if err := json.Unmarshal(body, &jsonData); err != nil {
+		return nil, err
+	}
+
+	keys := make([]string, 0, len(jsonData))
+	for key := range jsonData {
+		keys = append(keys, key)
+	}
+
+	return keys, nil
+}
+
+func Contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+func ContainsSome(slice []string, items []string) bool {
+	for _, item := range items {
+		if Contains(slice, item) {
+			return true
+		}
+	}
+	return false
 }

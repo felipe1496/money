@@ -121,6 +121,18 @@ definitions:
     - SimpleExpense
     - Income
     - Installment
+  transactions.CreateEntryRequest:
+    properties:
+      amount:
+        maximum: 999999
+        minimum: 0
+        type: number
+      reference_date:
+        type: string
+    required:
+    - amount
+    - reference_date
+    type: object
   transactions.CreateIncomeRequest:
     properties:
       amount:
@@ -219,6 +231,44 @@ definitions:
       entry:
         $ref: '#/definitions/transactions.ViewEntry'
     type: object
+  transactions.CreateTransactionRequest:
+    properties:
+      category_id:
+        type: string
+      entries:
+        items:
+          $ref: '#/definitions/transactions.CreateEntryRequest'
+        maxItems: 100
+        minItems: 1
+        type: array
+      name:
+        type: string
+      note:
+        maxLength: 400
+        minLength: 0
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/constants.TransactionType'
+        enum:
+        - installment
+        - simple_expense
+        - income
+    required:
+    - entries
+    - name
+    - type
+    type: object
+  transactions.CreateTransactionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.CreateTransactionResponseData'
+    type: object
+  transactions.CreateTransactionResponseData:
+    properties:
+      transaction:
+        $ref: '#/definitions/transactions.Transaction'
+    type: object
   transactions.ListEntriesResponse:
     properties:
       data:
@@ -232,6 +282,35 @@ definitions:
         items:
           $ref: '#/definitions/transactions.ViewEntry'
         type: array
+    type: object
+  transactions.Transaction:
+    properties:
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/constants.TransactionType'
+      user_id:
+        type: string
+    type: object
+  transactions.UpdateEntryRequest:
+    properties:
+      amount:
+        maximum: 999999
+        minimum: 0
+        type: number
+      reference_date:
+        type: string
+    required:
+    - amount
+    - reference_date
     type: object
   transactions.UpdateIncomeRequest:
     properties:
@@ -304,6 +383,38 @@ definitions:
     properties:
       entry:
         $ref: '#/definitions/transactions.ViewEntry'
+    type: object
+  transactions.UpdateTransactionRequest:
+    properties:
+      category_id:
+        type: string
+      entries:
+        items:
+          $ref: '#/definitions/transactions.UpdateEntryRequest'
+        maxItems: 100
+        minItems: 1
+        type: array
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      note:
+        maxLength: 400
+        minLength: 2
+        type: string
+    required:
+    - entries
+    - name
+    type: object
+  transactions.UpdateTransactionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/transactions.UpdateTransactionResponseData'
+    type: object
+  transactions.UpdateTransactionResponseData:
+    properties:
+      transaction:
+        $ref: '#/definitions/transactions.Transaction'
     type: object
   transactions.ViewEntry:
     properties:
@@ -433,17 +544,9 @@ paths:
         name: per_page
         type: integer
       - description: Sort field
-        example: name
+        example: name:asc,created_at:desc
         in: query
-        name: sort
-        type: string
-      - default: asc
-        description: Sort order (asc/desc)
-        enum:
-        - asc
-        - desc
-        in: query
-        name: order
+        name: order_by
         type: string
       - description: Category filter
         in: query
@@ -603,17 +706,9 @@ paths:
         name: filter
         type: string
       - description: Sort field
-        example: name
+        example: name:asc,created_at:desc
         in: query
-        name: sort
-        type: string
-      - default: asc
-        description: Sort order (asc/desc)
-        enum:
-        - asc
-        - desc
-        in: query
-        name: order
+        name: order_by
         type: string
       produces:
       - application/json
@@ -635,6 +730,42 @@ paths:
       summary: List categories with amount per period
       tags:
       - categories
+  /transactions:
+    post:
+      consumes:
+      - application/json
+      description: Create a transaction with all of it entries
+      parameters:
+      - description: Transaction payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.CreateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Installment updated
+          schema:
+            $ref: '#/definitions/transactions.CreateTransactionResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Create a transaction
+      tags:
+      - transactions
   /transactions/{transaction_id}:
     delete:
       consumes:
@@ -668,18 +799,53 @@ paths:
       summary: Delete Transaction By ID
       tags:
       - transactions
-  /transactions/entries/{period}:
+    patch:
+      consumes:
+      - application/json
+      description: Update a transaction
+      parameters:
+      - description: transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      - description: Installment payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/transactions.UpdateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Installment updated
+          schema:
+            $ref: '#/definitions/transactions.UpdateTransactionResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/utils.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Update a transaction
+      tags:
+      - transactions
+  /transactions/entries:
     get:
       consumes:
       - application/json
       description: List a detailed view of entries joined with transactions for a
         given period
       parameters:
-      - description: period in format YYYYMM
-        in: path
-        name: period
-        required: true
-        type: string
       - default: 1
         description: Page number
         in: query
@@ -691,17 +857,9 @@ paths:
         name: per_page
         type: integer
       - description: Sort field
-        example: name
+        example: name:asc,created_at:desc
         in: query
         name: order_by
-        type: string
-      - default: asc
-        description: Sort order (asc/desc)
-        enum:
-        - asc
-        - desc
-        in: query
-        name: order
         type: string
       produces:
       - application/json
