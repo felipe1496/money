@@ -20,7 +20,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func DelayMiddleware(delay time.Duration) gin.HandlerFunc {
+func DelayMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		delayStr := os.Getenv("DELAY")
 		if delayStr != "" {
@@ -43,7 +43,7 @@ func main() {
 	// add swagger
 	r.GET("/api-docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	r.Use(DelayMiddleware(2 * time.Second))
+	r.Use(DelayMiddleware())
 
 	err := godotenv.Load()
 	if err != nil {
