@@ -13,7 +13,7 @@ import (
 //
 // ==============================================================================
 type CreateTransactionRequest struct {
-	Name       string                    `json:"name" binding:"required"`
+	Name       string                    `json:"name" binding:"required,min=1,max=100"`
 	CategoryID *string                   `json:"category_id" binding:"omitempty"`
 	Note       *string                   `json:"note" binding:"omitempty,min=0,max=400"`
 	Type       constants.TransactionType `json:"type" binding:"required,oneof=installment simple_expense income"`
@@ -29,7 +29,7 @@ type UpdateTransactionRequest struct {
 	Update     []string              `json:"update" binding:"required,min=1,dive,oneof=name category_id note entries"`
 	Name       *string               `json:"name" binding:"omitempty,min=1,max=100"`
 	CategoryID *string               `json:"category_id" binding:"omitempty"`
-	Note       *string               `json:"note" binding:"omitempty,min=2,max=400"`
+	Note       *string               `json:"note" binding:"omitempty,min=0,max=400"`
 	Entries    *[]UpdateEntryRequest `json:"entries" binding:"omitempty,min=1,max=100,dive"`
 }
 
