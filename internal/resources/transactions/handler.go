@@ -130,13 +130,25 @@ func (api *API) CreateTransaction(ctx *gin.Context) {
 		return
 	}
 
+	var entriesDTO []CreateEntryDTO
+	if body.Entries != nil {
+		entries := make([]CreateEntryDTO, len(body.Entries))
+		for i, entry := range body.Entries {
+			entries[i] = CreateEntryDTO{
+				Amount:        entry.Amount,
+				ReferenceDate: entry.ReferenceDate,
+			}
+		}
+		entriesDTO = entries
+	}
+
 	transaction, err := api.transactionsUseCase.CreateTransaction(CreateTransactionDTO{
 		UserID:     userID,
 		Name:       body.Name,
 		CategoryID: body.CategoryID,
 		Note:       body.Note,
 		Type:       body.Type,
-		Entries:    body.Entries,
+		Entries:    entriesDTO,
 	})
 
 	if err != nil {

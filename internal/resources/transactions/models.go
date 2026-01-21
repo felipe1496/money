@@ -13,7 +13,7 @@ import (
 //
 // ==============================================================================
 type CreateTransactionRequest struct {
-	Name       string                    `json:"name" binding:"required"`
+	Name       string                    `json:"name" binding:"required,min=1,max=100"`
 	CategoryID *string                   `json:"category_id" binding:"omitempty"`
 	Note       *string                   `json:"note" binding:"omitempty,min=0,max=400"`
 	Type       constants.TransactionType `json:"type" binding:"required,oneof=installment simple_expense income"`
@@ -21,7 +21,7 @@ type CreateTransactionRequest struct {
 }
 
 type CreateEntryRequest struct {
-	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	Amount        float64 `json:"amount" binding:"required,gte=-999999,lte=999999"`
 	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
 }
 
@@ -29,12 +29,12 @@ type UpdateTransactionRequest struct {
 	Update     []string              `json:"update" binding:"required,min=1,dive,oneof=name category_id note entries"`
 	Name       *string               `json:"name" binding:"omitempty,min=1,max=100"`
 	CategoryID *string               `json:"category_id" binding:"omitempty"`
-	Note       *string               `json:"note" binding:"omitempty,min=2,max=400"`
+	Note       *string               `json:"note" binding:"omitempty,min=0,max=400"`
 	Entries    *[]UpdateEntryRequest `json:"entries" binding:"omitempty,min=1,max=100,dive"`
 }
 
 type UpdateEntryRequest struct {
-	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	Amount        float64 `json:"amount" binding:"required,gte=-999999,lte=999999"`
 	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
 }
 
@@ -74,7 +74,7 @@ type CreateTransactionDTO struct {
 	CategoryID *string
 	Note       *string
 	Type       constants.TransactionType
-	Entries    []CreateEntryRequest
+	Entries    []CreateEntryDTO
 }
 
 type CreateEntryDTO struct {
