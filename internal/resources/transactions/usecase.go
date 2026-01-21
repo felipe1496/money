@@ -73,21 +73,37 @@ func (uc *TransactionsUseCaseImpl) DeleteTransactionById(id string) error {
 	return nil
 }
 
-type validadeTransactionProps struct {
-	Entries []validateTransactionPropsEntry
-	Type    constants.TransactionType
-}
-
 type validateTransactionPropsEntry struct {
 	Amount        float64
 	ReferenceDate string
 }
 
-func validateTransaction(payload validadeTransactionProps) error {
-	for i, refEntry := range payload.Entries {
+func validateTransaction(entries []validateTransactionPropsEntry, transactionType constants.TransactionType) error {
+	switch transactionType {
+	case constants.SimpleExpense:
+		{
+			if len(entries) > 1 {
+				return utils.NewHTTPError(http.StatusBadRequest, "expense must have only one entry")
+			}
+		}
+	case constants.Income:
+		{
+			if len(entries) > 1 {
+				return utils.NewHTTPError(http.StatusBadRequest, "income must have only one entry")
+			}
+		}
+	case constants.Installment:
+		{
+			if len(entries) < 2 {
+				return utils.NewHTTPError(http.StatusBadRequest, "installment must have at least two entries")
+			}
+		}
+	}
+
+	for i, refEntry := range entries {
 		iRefDate, _ := time.Parse("2006-01-02", refEntry.ReferenceDate)
 		iPeriod := iRefDate.Format("200601")
-		for j, currEntry := range payload.Entries {
+		for j, currEntry := range entries {
 			if i != j {
 				jRefDate, _ := time.Parse("2006-01-02", currEntry.ReferenceDate)
 				jPeriod := jRefDate.Format("200601")
@@ -97,25 +113,25 @@ func validateTransaction(payload validadeTransactionProps) error {
 				}
 			}
 		}
-	}
 
-	switch payload.Type {
-	case constants.SimpleExpense:
-		{
-			if len(payload.Entries) > 1 {
-				return utils.NewHTTPError(http.StatusBadRequest, "expense must have only one entry")
+		switch transactionType {
+		case constants.Installment:
+			{
+				if refEntry.Amount >= 0 {
+					return utils.NewHTTPError(http.StatusBadRequest, "installment entries must have amount lower than zero")
+				}
 			}
-		}
-	case constants.Income:
-		{
-			if len(payload.Entries) > 1 {
-				return utils.NewHTTPError(http.StatusBadRequest, "income must have only one entry")
+		case constants.SimpleExpense:
+			{
+				if refEntry.Amount >= 0 {
+					return utils.NewHTTPError(http.StatusBadRequest, "expense entry must have amount lower than zero")
+				}
 			}
-		}
-	case constants.Installment:
-		{
-			if len(payload.Entries) < 2 {
-				return utils.NewHTTPError(http.StatusBadRequest, "installment must have at least two entries")
+		case constants.Income:
+			{
+				if refEntry.Amount <= 0 {
+					return utils.NewHTTPError(http.StatusBadRequest, "income entry must have amount greater than zero")
+				}
 			}
 		}
 	}
@@ -124,19 +140,18 @@ func validateTransaction(payload validadeTransactionProps) error {
 
 func (uc *TransactionsUseCaseImpl) CreateTransaction(payload CreateTransactionDTO) (Transaction, error) {
 
-	err := validateTransaction(validadeTransactionProps{
-		Entries: func() []validateTransactionPropsEntry {
-			entries := make([]validateTransactionPropsEntry, len(payload.Entries))
-			for i, entry := range payload.Entries {
-				entries[i] = validateTransactionPropsEntry{
+	err := validateTransaction(func() []validateTransactionPropsEntry {
+		entries := make([]validateTransactionPropsEntry, 0)
+		if payload.Entries != nil {
+			for _, entry := range payload.Entries {
+				entries = append(entries, validateTransactionPropsEntry{
 					Amount:        entry.Amount,
 					ReferenceDate: entry.ReferenceDate,
-				}
+				})
 			}
-			return entries
-		}(),
-		Type: payload.Type,
-	})
+		}
+		return entries
+	}(), payload.Type)
 	if err != nil {
 		return Transaction{}, err
 	}
@@ -241,21 +256,19 @@ func (uc *TransactionsUseCaseImpl) UpdateTransaction(transactionID string, userI
 	}
 
 	if payload.Entries != nil && utils.Contains(payload.Update, "entries") {
-		err = validateTransaction(validadeTransactionProps{
-			Entries: func() []validateTransactionPropsEntry {
-				entries := make([]validateTransactionPropsEntry, 0)
-				if payload.Entries != nil {
-					for _, entry := range *payload.Entries {
-						entries = append(entries, validateTransactionPropsEntry{
-							Amount:        entry.Amount,
-							ReferenceDate: entry.ReferenceDate,
-						})
-					}
+		err = validateTransaction(func() []validateTransactionPropsEntry {
+			entries := make([]validateTransactionPropsEntry, 0)
+			if payload.Entries != nil {
+				for _, entry := range *payload.Entries {
+					entries = append(entries, validateTransactionPropsEntry{
+						Amount:        entry.Amount,
+						ReferenceDate: entry.ReferenceDate,
+					})
 				}
-				return entries
-			}(),
-			Type: exists[0].Type,
-		})
+			}
+			return entries
+		}(), exists[0].Type,
+		)
 
 		if err != nil {
 			return Transaction{}, err

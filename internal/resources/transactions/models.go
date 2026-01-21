@@ -21,7 +21,7 @@ type CreateTransactionRequest struct {
 }
 
 type CreateEntryRequest struct {
-	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	Amount        float64 `json:"amount" binding:"required,gte=-999999,lte=999999"`
 	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
 }
 
@@ -34,7 +34,7 @@ type UpdateTransactionRequest struct {
 }
 
 type UpdateEntryRequest struct {
-	Amount        float64 `json:"amount" binding:"required,gte=0,lte=999999"`
+	Amount        float64 `json:"amount" binding:"required,gte=-999999,lte=999999"`
 	ReferenceDate string  `json:"reference_date" binding:"required,datetime=2006-01-02"`
 }
 
@@ -74,7 +74,7 @@ type CreateTransactionDTO struct {
 	CategoryID *string
 	Note       *string
 	Type       constants.TransactionType
-	Entries    []CreateEntryRequest
+	Entries    []CreateEntryDTO
 }
 
 type CreateEntryDTO struct {
